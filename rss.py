@@ -89,7 +89,10 @@ def build_rss(episodes, feed_url):
     <link>{feed_url}</link>
     <language>{PODCAST_LANGUAGE}</language>
     <itunes:author>{pod_author}</itunes:author>
-    <itunes:email>{pod_email}</itunes:email>
+    <itunes:owner>
+      <itunes:name>{pod_author}</itunes:name>
+      <itunes:email>{pod_email}</itunes:email>
+    </itunes:owner>
     <itunes:category text="{PODCAST_CATEGORY}">
       <itunes:category text="{PODCAST_SUBCATEGORY}"/>
     </itunes:category>
