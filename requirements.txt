@@ -2,4 +2,3 @@ feedparser
 requests
 beautifulsoup4
 supabase
-google-generativeai
