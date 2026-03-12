@@ -1,22 +1,19 @@
 import os
 import json
+import requests
 from datetime import datetime, timezone
 from supabase import create_client
-import google.generativeai as genai
 
 # ─── CONFIG ───────────────────────────────────────────────
 
-SUPABASE_URL = os.environ["SUPABASE_URL"]
-SUPABASE_KEY = os.environ["SUPABASE_KEY"]
-GEMINI_KEY   = os.environ["GEMINI_API_KEY"]
+SUPABASE_URL  = os.environ["SUPABASE_URL"]
+SUPABASE_KEY  = os.environ["SUPABASE_KEY"]
+MISTRAL_KEY   = os.environ["MISTRAL_API_KEY"]
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
-genai.configure(api_key=GEMINI_KEY)
 
-model = genai.GenerativeModel(
-    model_name="gemini-2.0-flash",
-    tools="google_search_retrieval"
-)
+MISTRAL_MODEL = "mistral-small-latest"  # free tier model
+MISTRAL_URL   = "https://api.mistral.ai/v1/chat/completions"
 
 # ─── STEP 1: FETCH THIS WEEK'S ARTICLES ───────────────────
 
@@ -38,9 +35,48 @@ def fetch_weeks_articles():
     print(f"Found {len(articles)} articles.")
     return articles, week, year
 
-# ─── STEP 2: BUILD PROMPT ─────────────────────────────────
+# ─── STEP 2: WEB SEARCH FOR ENRICHMENT ───────────────────
+# Uses DuckDuckGo — no API key needed
 
-def build_prompt(articles):
+def web_search(query):
+    try:
+        r = requests.get(
+            "https://api.duckduckgo.com/",
+            params={"q": query, "format": "json", "no_html": 1, "skip_disambig": 1},
+            timeout=10
+        )
+        data = r.json()
+        results = []
+        # Abstract text
+        if data.get("Abstract"):
+            results.append(data["Abstract"])
+        # Related topics
+        for topic in data.get("RelatedTopics", [])[:3]:
+            if isinstance(topic, dict) and topic.get("Text"):
+                results.append(topic["Text"])
+        return " | ".join(results) if results else ""
+    except Exception as e:
+        print(f"  Search error: {e}")
+        return ""
+
+def enrich_with_search(themes):
+    print("Enriching themes with web search...")
+    enrichments = {}
+    search_queries = [
+        "ESG reporting standards 2026 latest news",
+        "carbon markets CBAM update 2026",
+        "climate finance developments March 2026",
+        "sustainability disclosure regulations 2026",
+    ]
+    for q in search_queries:
+        result = web_search(q)
+        if result:
+            enrichments[q] = result
+    return enrichments
+
+# ─── STEP 3: BUILD PROMPT ─────────────────────────────────
+
+def build_prompt(articles, enrichments):
     articles_text = ""
     for i, a in enumerate(articles, 1):
         articles_text += f"""
@@ -48,9 +84,13 @@ def build_prompt(articles):
 Article {i}
 Source: {a['source_label']}
 Title: {a['title']}
-URL: {a['url']}
 Content: {a['body_text'][:3000]}
 """
+
+    enrichment_text = ""
+    for query, result in enrichments.items():
+        if result:
+            enrichment_text += f"\nSearch: {query}\nResult: {result}\n"
 
     prompt = f"""You are the host of a weekly podcast called "The ESG & Climate Briefing" — a professional, intelligent digest for sustainability, climate finance, and non-financial reporting practitioners.
 
@@ -60,7 +100,7 @@ TASK:
 1. Read all the articles below from this week's sources
 2. Identify key themes, grouping related stories together
 3. Eliminate repetition — if multiple sources cover the same story, synthesize them into one richer account noting differences in framing
-4. Use your Google Search grounding to enrich each major theme with the very latest developments not yet in the articles
+4. Weave in the web search enrichment results naturally where relevant
 5. Write a complete, natural podcast script of approximately 3,500–4,500 words (shorter if it's a quiet week)
 
 SCRIPT STRUCTURE:
@@ -83,27 +123,37 @@ OUTPUT: Return ONLY a JSON object with no markdown fences:
   "script": "the full podcast script as a single string with paragraph breaks as \\n\\n"
 }}
 
-HERE ARE THIS WEEK'S ARTICLES:
+THIS WEEK'S ARTICLES:
 {articles_text}
+
+LATEST WEB SEARCH ENRICHMENT:
+{enrichment_text if enrichment_text else "No additional search results available."}
 """
     return prompt
 
-# ─── STEP 3: CALL GEMINI ──────────────────────────────────
+# ─── STEP 4: CALL MISTRAL ─────────────────────────────────
 
 def generate_digest(prompt):
-    print("Sending to Gemini Flash (with Google Search grounding)...")
+    print(f"Sending to Mistral ({MISTRAL_MODEL})...")
 
-    response = model.generate_content(
-        prompt,
-        generation_config=genai.GenerationConfig(
-            max_output_tokens=8000,
-            temperature=0.4
-        )
-    )
+    headers = {
+        "Authorization": f"Bearer {MISTRAL_KEY}",
+        "Content-Type": "application/json"
+    }
 
-    return response.text.strip()
+    payload = {
+        "model": MISTRAL_MODEL,
+        "messages": [{"role": "user", "content": prompt}],
+        "max_tokens": 8000,
+        "temperature": 0.4
+    }
 
-# ─── STEP 4: PARSE AND SAVE ───────────────────────────────
+    r = requests.post(MISTRAL_URL, headers=headers, json=payload, timeout=120)
+    r.raise_for_status()
+
+    return r.json()["choices"][0]["message"]["content"].strip()
+
+# ─── STEP 5: PARSE AND SAVE ───────────────────────────────
 
 def save_digest(raw_response, week, year):
     clean = raw_response.replace("```json", "").replace("```", "").strip()
@@ -135,7 +185,7 @@ def save_digest(raw_response, week, year):
 
     return digest
 
-# ─── STEP 5: MARK ARTICLES AS PROCESSED ───────────────────
+# ─── STEP 6: MARK ARTICLES AS PROCESSED ───────────────────
 
 def mark_articles_processed(week, year):
     supabase.table("articles") \
@@ -158,7 +208,8 @@ def run():
         print("No new articles this week. Exiting.")
         return
 
-    prompt = build_prompt(articles)
+    enrichments = enrich_with_search(articles)
+    prompt = build_prompt(articles, enrichments)
     raw_response = generate_digest(prompt)
     digest = save_digest(raw_response, week, year)
 
