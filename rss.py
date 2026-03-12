@@ -1,6 +1,8 @@
 import os
+import re
 import requests
 from datetime import datetime, timezone
+from xml.sax.saxutils import escape
 from supabase import create_client
 
 # ─── CONFIG ───────────────────────────────────────────────
@@ -13,7 +15,7 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 PODCAST_TITLE       = "The ESG & Climate Briefing"
 PODCAST_DESCRIPTION = "Your weekly AI-powered digest of the most important developments in sustainability, climate finance, carbon accounting, and non-financial reporting."
 PODCAST_AUTHOR      = "ESG Digest Bot"
-PODCAST_EMAIL       = "parciald2012@email.com"   # ← replace with your email
+PODCAST_EMAIL       = "your@email.com"   # ← replace with your email
 PODCAST_LANGUAGE    = "en-gb"
 PODCAST_CATEGORY    = "Business"
 
@@ -56,8 +58,8 @@ def build_rss(episodes, feed_url):
 
         size = get_audio_size(ep["audio_url"])
         pub_date = rfc2822(ep.get("created_at", ""))
-        title = ep.get("title", f"Week {ep['week_number']}, {ep['year']}")
-        summary = ep.get("summary", "")
+        title = escape(ep.get("title", f"Week {ep['week_number']}, {ep['year']}"))
+        summary = escape(ep.get("summary", ""))
 
         items += f"""
     <item>
@@ -107,7 +109,7 @@ def upload_rss(rss_content):
     supabase.storage.from_("podcasts").upload(
         path=storage_path,
         file=rss_bytes,
-        file_options={"content-type": "application/rss+xml"}
+        file_options={"content-type": "text/xml; charset=utf-8"}
     )
 
     public_url = supabase.storage.from_("podcasts").get_public_url(storage_path)
