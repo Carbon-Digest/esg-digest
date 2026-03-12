@@ -17,6 +17,8 @@ PODCAST_AUTHOR      = "ESG Digest"
 PODCAST_EMAIL       = "your@email.com"   # ← replace with your email
 PODCAST_LANGUAGE    = "en-gb"
 PODCAST_CATEGORY    = "Business"
+PODCAST_SUBCATEGORY = "Non-Profit"
+PODCAST_ARTWORK     = "https://placehold.co/1400x1400/166534/ffffff/png?text=ESG+Briefing"  # ← replace with your own image URL later
 
 # ─── STEP 1: FETCH ALL PUBLISHED EPISODES ─────────────────
 
@@ -62,10 +64,12 @@ def build_rss(episodes, feed_url):
         pub_date = rfc2822(ep.get("created_at", ""))
         title    = escape(ep.get("title", f"Week {ep['week_number']}, {ep['year']}"))
         summary  = escape(ep.get("summary", ""))
+        ep_link  = ep.get("audio_url", "")
 
         items += f"""
     <item>
       <title>{title}</title>
+      <link>{ep_link}</link>
       <description>{summary}</description>
       <enclosure url="{ep['audio_url']}" length="{size}" type="audio/mpeg"/>
       <guid isPermaLink="false">{ep['audio_url']}</guid>
@@ -86,9 +90,12 @@ def build_rss(episodes, feed_url):
     <language>{PODCAST_LANGUAGE}</language>
     <itunes:author>{pod_author}</itunes:author>
     <itunes:email>{pod_email}</itunes:email>
-    <itunes:category text="{PODCAST_CATEGORY}"/>
+    <itunes:category text="{PODCAST_CATEGORY}">
+      <itunes:category text="{PODCAST_SUBCATEGORY}"/>
+    </itunes:category>
     <itunes:explicit>false</itunes:explicit>
     <itunes:type>episodic</itunes:type>
+    <itunes:image href="{PODCAST_ARTWORK}"/>
     <lastBuildDate>{datetime.now(timezone.utc).strftime("%a, %d %b %Y %H:%M:%S +0000")}</lastBuildDate>
     {items}
   </channel>
