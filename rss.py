@@ -78,12 +78,12 @@ def build_rss(episodes, feed_url):
   xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"
   xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
-    <title>{PODCAST_TITLE}</title>
-    <description>{PODCAST_DESCRIPTION}</description>
+    <title>{pod_title}</title>
+    <description>{pod_desc}</description>
     <link>{feed_url}</link>
     <language>{PODCAST_LANGUAGE}</language>
-    <itunes:author>{PODCAST_AUTHOR}</itunes:author>
-    <itunes:email>{PODCAST_EMAIL}</itunes:email>
+    <itunes:author>{pod_author}</itunes:author>
+    <itunes:email>{pod_email}</itunes:email>
     <itunes:category text="{PODCAST_CATEGORY}"/>
     <itunes:explicit>false</itunes:explicit>
     <itunes:type>episodic</itunes:type>
