@@ -1,5 +1,4 @@
 import os
-import re
 import requests
 from datetime import datetime, timezone
 from xml.sax.saxutils import escape
@@ -7,14 +6,14 @@ from supabase import create_client
 
 # ─── CONFIG ───────────────────────────────────────────────
 
-SUPABASE_URL = os.environ["SUPABASE_URL"]
-SUPABASE_KEY = os.environ["SUPABASE_KEY"]
+SUPABASE_URL        = os.environ["SUPABASE_URL"]
+SUPABASE_KEY        = os.environ["SUPABASE_KEY"]
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-PODCAST_TITLE       = "The ESG & Climate Briefing"
-PODCAST_DESCRIPTION = "Your weekly AI-powered digest of the most important developments in sustainability, climate finance, carbon accounting, and non-financial reporting."
-PODCAST_AUTHOR      = "ESG Digest Bot"
+PODCAST_TITLE       = "The ESG and Climate Briefing"
+PODCAST_DESCRIPTION = "Your weekly AI-generated digest of the most important developments in sustainability, climate finance, carbon accounting, and non-financial reporting."
+PODCAST_AUTHOR      = "ESG Digest"
 PODCAST_EMAIL       = "your@email.com"   # ← replace with your email
 PODCAST_LANGUAGE    = "en-gb"
 PODCAST_CATEGORY    = "Business"
@@ -41,7 +40,6 @@ def get_audio_size(url):
 # ─── STEP 3: FORMAT DATE FOR RSS ──────────────────────────
 
 def rfc2822(dt_str):
-    """Convert ISO timestamp to RFC 2822 format required by RSS."""
     try:
         dt = datetime.fromisoformat(dt_str.replace("Z", "+00:00"))
     except Exception:
@@ -51,15 +49,19 @@ def rfc2822(dt_str):
 # ─── STEP 4: BUILD RSS XML ────────────────────────────────
 
 def build_rss(episodes, feed_url):
+    pod_title  = escape(PODCAST_TITLE)
+    pod_desc   = escape(PODCAST_DESCRIPTION)
+    pod_author = escape(PODCAST_AUTHOR)
+    pod_email  = escape(PODCAST_EMAIL)
+
     items = ""
     for ep in episodes:
         if not ep.get("audio_url"):
             continue
-
-        size = get_audio_size(ep["audio_url"])
+        size     = get_audio_size(ep["audio_url"])
         pub_date = rfc2822(ep.get("created_at", ""))
-        title = escape(ep.get("title", f"Week {ep['week_number']}, {ep['year']}"))
-        summary = escape(ep.get("summary", ""))
+        title    = escape(ep.get("title", f"Week {ep['week_number']}, {ep['year']}"))
+        summary  = escape(ep.get("summary", ""))
 
         items += f"""
     <item>
@@ -96,11 +98,9 @@ def build_rss(episodes, feed_url):
 # ─── STEP 5: UPLOAD RSS TO SUPABASE STORAGE ───────────────
 
 def upload_rss(rss_content):
-    filename = "feed.xml"
-    storage_path = f"rss/{filename}"
-    rss_bytes = rss_content.encode("utf-8")
+    storage_path = "rss/feed.xml"
+    rss_bytes    = rss_content.encode("utf-8")
 
-    # Delete old version first to allow re-upload
     try:
         supabase.storage.from_("podcasts").remove([storage_path])
     except Exception:
@@ -130,15 +130,12 @@ def run():
         print("No episodes with audio yet. Exiting.")
         return
 
-    # Get the feed URL (we need it before building RSS)
-    feed_url = supabase.storage.from_("podcasts").get_public_url("rss/feed.xml")
-
+    feed_url    = supabase.storage.from_("podcasts").get_public_url("rss/feed.xml")
     rss_content = build_rss(episodes, feed_url)
-    public_url = upload_rss(rss_content)
+    public_url  = upload_rss(rss_content)
 
-    print(f"\n✅ Your podcast RSS feed is live at:")
-    print(f"   {public_url}")
-    print(f"\n→ Paste this URL into Spotify for Podcasters to publish your podcast.")
+    print(f"\n✅ RSS feed live at:\n   {public_url}")
+    print(f"\n→ Paste this URL into Spotify for Podcasters.")
 
 if __name__ == "__main__":
     run()
