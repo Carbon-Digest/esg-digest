@@ -13,7 +13,6 @@ GEMINI_KEY   = os.environ["GEMINI_API_KEY"]
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 genai.configure(api_key=GEMINI_KEY)
 
-# Use Gemini Flash with Google Search grounding
 model = genai.GenerativeModel(
     model_name="gemini-1.5-flash",
     tools="google_search_retrieval"
@@ -98,7 +97,7 @@ def generate_digest(prompt):
         prompt,
         generation_config=genai.GenerationConfig(
             max_output_tokens=8000,
-            temperature=0.4      # balanced: creative but consistent
+            temperature=0.4
         )
     )
 
