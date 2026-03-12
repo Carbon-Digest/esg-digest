@@ -104,15 +104,16 @@ TASK:
 5. Write a complete, natural podcast script of approximately 3,500–4,500 words (shorter if it's a quiet week)
 
 SCRIPT STRUCTURE:
-- [INTRO] Warm but professional opening. State the week and tease 2-3 headline topics.
+- [INTRO] Always open with exactly this format, filling in the blanks:
+  "Hello and welcome to the ESG and Climate Briefing — your AI-powered digest of last week's most important developments in sustainability, climate finance, and non-financial reporting. I'm your host, and this is week [X] of [YEAR]. This week we're covering [topic 1], [topic 2], and [topic 3]. Let's dive in."
 - [SECTIONS] One section per major theme, with natural transitions between them
-- [OUTRO] Brief closing that looks ahead to what to watch next week
+- [SOURCE MENTIONS] When introducing information from a specific source, mention it naturally by name. For example: "Carbon Brief reported this week that...", "The Science Based Targets initiative announced...", "Over at the GHG Protocol blog...", "The World Resources Institute published...", "According to the European Environment Agency's Climate-ADAPT platform...". Vary the phrasing so it doesn't feel repetitive.
+- [OUTRO] Close with: "That's all for this week's ESG and Climate Briefing. As always, this digest was compiled from sources including [list the sources used this week]. If any of these topics caught your attention, I've included links in the show notes. See you next week."
 
 FORMATTING RULES:
 - Write exactly as it will be spoken — no bullet points, no headers
 - Use natural spoken language: contractions, rhetorical questions, short sentences for emphasis
 - Mark meaningful pauses with [PAUSE]
-- Reference organisations naturally: "the Science Based Targets initiative announced..." not "Source: SBTi"
 - If a week is quiet on a topic, say so briefly and move on
 
 OUTPUT: Return ONLY a JSON object with no markdown fences:
