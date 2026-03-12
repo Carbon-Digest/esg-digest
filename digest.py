@@ -14,7 +14,7 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 genai.configure(api_key=GEMINI_KEY)
 
 model = genai.GenerativeModel(
-    model_name="gemini-1.5-flash",
+    model_name="gemini-2.0-flash",
     tools="google_search_retrieval"
 )
 
