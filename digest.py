@@ -1,18 +1,15 @@
 import os
 import json
+import psycopg2  # Use psycopg2 for PostgreSQL
 import requests
 from datetime import datetime, timezone
-from supabase import create_client
 
 # ─── CONFIG ───────────────────────────────────────────────
 
-SUPABASE_URL  = os.environ["SUPABASE_URL"]
-SUPABASE_KEY  = os.environ["SUPABASE_KEY"]
+NEON_URL = os.environ["NEON_POSTGRES_URL"]  # e.g., "postgres://user:pass@ep-cool-123456.us-east-2.aws.neon.tech/dbname"
+
 MISTRAL_KEY   = os.environ["MISTRAL_API_KEY"]
-
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
-
-MISTRAL_MODEL = "mistral-medium-latest"  # free tier model
+MISTRAL_MODEL = "mistral-small-latest"
 MISTRAL_URL   = "https://api.mistral.ai/v1/chat/completions"
 
 # ─── STEP 1: FETCH THIS WEEK'S ARTICLES ───────────────────
@@ -24,16 +21,27 @@ def fetch_weeks_articles():
 
     print(f"Fetching articles for week {week}/{year}...")
 
-    result = supabase.table("articles") \
-        .select("source_label, title, url, body_text, published_at") \
-        .eq("week_number", week) \
-        .eq("year", year) \
-        .eq("processed", False) \
-        .execute()
+    try:
+        conn = psycopg2.connect(NEON_URL)
+        cursor = conn.cursor()
 
-    articles = result.data
-    print(f"Found {len(articles)} articles.")
-    return articles, week, year
+        cursor.execute("""
+            SELECT source_label, title, url, body_text, published_at
+            FROM articles
+            WHERE week_number = %s AND year = %s AND processed = FALSE
+        """, (week, year))
+
+        articles = cursor.fetchall()
+        articles = [dict(zip(['source_label', 'title', 'url', 'body_text', 'published_at'], row)) for row in articles]
+        print(f"Found {len(articles)} articles.")
+        return articles, week, year
+
+    except Exception as e:
+        print(f"❌ Neon Error: {e}")
+        raise
+    finally:
+        if 'conn' in locals():
+            conn.close()
 
 # ─── STEP 2: WEB SEARCH FOR ENRICHMENT ───────────────────
 # Uses DuckDuckGo — no API key needed
@@ -47,10 +55,8 @@ def web_search(query):
         )
         data = r.json()
         results = []
-        # Abstract text
         if data.get("Abstract"):
             results.append(data["Abstract"])
-        # Related topics
         for topic in data.get("RelatedTopics", [])[:3]:
             if isinstance(topic, dict) and topic.get("Text"):
                 results.append(topic["Text"])
@@ -104,8 +110,8 @@ TASK:
 5. Write a complete, natural podcast script of approximately 3,500–4,500 words (shorter if it's a quiet week)
 
 SCRIPT STRUCTURE:
-- [INTRO] Always open with this format, filling in the blanks:
-  "This is the Climate Briefing — an AI-generated digest of last week's most important developments in climate finance, risks and carbon accounting, and non-financial reporting. This is week [X] of [YEAR]. This week's digest covers [topic 1], [topic 2], and [topic 3]."
+- [INTRO] Always open with exactly this format, filling in the blanks:
+  "This is the ESG and Climate Briefing — an AI-generated digest of last week's most important developments in sustainability, climate finance, carbon accounting, and non-financial reporting. This is week [X] of [YEAR]. This week's digest covers [topic 1], [topic 2], and [topic 3]."
 - [SECTIONS] One section per major theme, with clear factual transitions between them
 - [SOURCE MENTIONS] Always attribute information to its source clearly and directly. For example: "The Science Based Targets initiative published...", "Carbon Brief reported...", "The GHG Protocol announced...", "The World Resources Institute noted...", "The European Environment Agency's Climate-ADAPT platform recorded...". Vary the phrasing but keep it factual and direct.
 - [OUTRO] Close with: "That concludes this week's ESG and Climate Briefing. This digest was compiled by an AI system from the following sources: [list the sources used this week]. Source links are available in the show notes. This briefing is generated automatically each week."
@@ -134,6 +140,7 @@ LATEST WEB SEARCH ENRICHMENT:
     return prompt
 
 # ─── STEP 4: CALL MISTRAL ─────────────────────────────────
+
 def generate_digest(prompt):
     print(f"Sending to Mistral ({MISTRAL_MODEL})...")
 
@@ -150,39 +157,11 @@ def generate_digest(prompt):
     }
 
     try:
-        # Make the API call
         r = requests.post(MISTRAL_URL, headers=headers, json=payload, timeout=120)
-        r.raise_for_status()  # Raises an HTTPError for bad responses (4xx, 5xx)
-
-        # Parse the response
-        response_data = r.json()
-        if "choices" not in response_data or not response_data["choices"]:
-            raise ValueError("Invalid API response: 'choices' not found or empty.")
-
-        return response_data["choices"][0]["message"]["content"].strip()
-
-    except requests.exceptions.HTTPError as http_err:
-        print(f"❌ HTTP Error: {http_err}")
-        print(f"Response status code: {r.status_code}")
-        print(f"Response body: {r.text}")
-        raise
-    except requests.exceptions.ConnectionError as conn_err:
-        print(f"❌ Connection Error: {conn_err}")
-        print("Check your internet connection or firewall.")
-        raise
-    except requests.exceptions.Timeout as timeout_err:
-        print(f"❌ Timeout Error: {timeout_err}")
-        print("Request timed out. Increase timeout or check network.")
-        raise
-    except requests.exceptions.RequestException as req_err:
-        print(f"❌ Request Error: {req_err}")
-        raise
-    except ValueError as json_err:
-        print(f"❌ JSON Parsing Error: {json_err}")
-        print(f"Raw response: {r.text}")
-        raise
+        r.raise_for_status()
+        return r.json()["choices"][0]["message"]["content"].strip()
     except Exception as e:
-        print(f"❌ Unexpected Error: {e}")
+        print(f"❌ Mistral API Error: {e}")
         raise
 
 # ─── STEP 5: PARSE AND SAVE ───────────────────────────────
@@ -199,33 +178,59 @@ def save_digest(raw_response, week, year):
         print("Raw response saved to digest_raw.txt for inspection")
         return None
 
-    supabase.table("digests").insert({
-        "week_number": week,
-        "year": year,
-        "title": digest.get("title"),
-        "summary": digest.get("summary"),
-        "themes": digest.get("themes"),
-        "script": digest.get("script"),
-        "audio_url": None,
-        "created_at": datetime.now(timezone.utc).isoformat()
-    }).execute()
+    try:
+        conn = psycopg2.connect(NEON_URL)
+        cursor = conn.cursor()
 
-    print(f"\n✅ Digest saved: {digest.get('title')}")
-    print(f"Summary: {digest.get('summary')}")
-    print(f"Themes: {', '.join(digest.get('themes', []))}")
-    print(f"Script length: {len(digest.get('script', ''))} characters")
+        cursor.execute("""
+            INSERT INTO digests (week_number, year, title, summary, themes, script, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (
+            week,
+            year,
+            digest.get("title"),
+            digest.get("summary"),
+            json.dumps(digest.get("themes", [])),
+            digest.get("script"),
+            datetime.now(timezone.utc).isoformat()
+        ))
+
+        conn.commit()
+        print(f"\n✅ Digest saved: {digest.get('title')}")
+        print(f"Summary: {digest.get('summary')}")
+        print(f"Themes: {', '.join(digest.get('themes', []))}")
+        print(f"Script length: {len(digest.get('script', ''))} characters")
+
+    except Exception as e:
+        print(f"❌ Neon Save Error: {e}")
+        raise
+    finally:
+        if 'conn' in locals():
+            conn.close()
 
     return digest
 
 # ─── STEP 6: MARK ARTICLES AS PROCESSED ───────────────────
 
 def mark_articles_processed(week, year):
-    supabase.table("articles") \
-        .update({"processed": True}) \
-        .eq("week_number", week) \
-        .eq("year", year) \
-        .execute()
-    print("Articles marked as processed.")
+    try:
+        conn = psycopg2.connect(NEON_URL)
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            UPDATE articles
+            SET processed = TRUE
+            WHERE week_number = %s AND year = %s
+        """, (week, year))
+
+        conn.commit()
+        print("Articles marked as processed.")
+    except Exception as e:
+        print(f"❌ Neon Update Error: {e}")
+        raise
+    finally:
+        if 'conn' in locals():
+            conn.close()
 
 # ─── MAIN ─────────────────────────────────────────────────
 
