@@ -134,7 +134,6 @@ LATEST WEB SEARCH ENRICHMENT:
     return prompt
 
 # ─── STEP 4: CALL MISTRAL ─────────────────────────────────
-
 def generate_digest(prompt):
     print(f"Sending to Mistral ({MISTRAL_MODEL})...")
 
@@ -150,10 +149,41 @@ def generate_digest(prompt):
         "temperature": 0.4
     }
 
-    r = requests.post(MISTRAL_URL, headers=headers, json=payload, timeout=120)
-    r.raise_for_status()
+    try:
+        # Make the API call
+        r = requests.post(MISTRAL_URL, headers=headers, json=payload, timeout=120)
+        r.raise_for_status()  # Raises an HTTPError for bad responses (4xx, 5xx)
 
-    return r.json()["choices"][0]["message"]["content"].strip()
+        # Parse the response
+        response_data = r.json()
+        if "choices" not in response_data or not response_data["choices"]:
+            raise ValueError("Invalid API response: 'choices' not found or empty.")
+
+        return response_data["choices"][0]["message"]["content"].strip()
+
+    except requests.exceptions.HTTPError as http_err:
+        print(f"❌ HTTP Error: {http_err}")
+        print(f"Response status code: {r.status_code}")
+        print(f"Response body: {r.text}")
+        raise
+    except requests.exceptions.ConnectionError as conn_err:
+        print(f"❌ Connection Error: {conn_err}")
+        print("Check your internet connection or firewall.")
+        raise
+    except requests.exceptions.Timeout as timeout_err:
+        print(f"❌ Timeout Error: {timeout_err}")
+        print("Request timed out. Increase timeout or check network.")
+        raise
+    except requests.exceptions.RequestException as req_err:
+        print(f"❌ Request Error: {req_err}")
+        raise
+    except ValueError as json_err:
+        print(f"❌ JSON Parsing Error: {json_err}")
+        print(f"Raw response: {r.text}")
+        raise
+    except Exception as e:
+        print(f"❌ Unexpected Error: {e}")
+        raise
 
 # ─── STEP 5: PARSE AND SAVE ───────────────────────────────
 
