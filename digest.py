@@ -12,7 +12,7 @@ MISTRAL_KEY   = os.environ["MISTRAL_API_KEY"]
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-MISTRAL_MODEL = "mistral-small-latest"  # free tier model
+MISTRAL_MODEL = "mistral-medium-latest"  # free tier model
 MISTRAL_URL   = "https://api.mistral.ai/v1/chat/completions"
 
 # ─── STEP 1: FETCH THIS WEEK'S ARTICLES ───────────────────
