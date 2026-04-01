@@ -3,7 +3,34 @@ import json
 import psycopg2  # Use psycopg2 for PostgreSQL
 import requests
 from datetime import datetime, timezone
+import time  # Add this at the top of your script
 
+def run():
+    print("=" * 60)
+    print(f"ESG Digest Generator — {datetime.now().strftime('%Y-%m-%d %H:%M UTC')}")
+    print("=" * 60)
+
+    articles, week, year = fetch_weeks_articles()
+
+    if not articles:
+        print("No new articles this week. Exiting.")
+        return
+
+    enrichments = enrich_with_search(articles)
+    prompt = build_prompt(articles, enrichments)
+
+    # Add this delay to avoid 429 errors
+    print("Waiting to avoid Mistral rate limits...")
+    time.sleep(2)  # Wait 2 seconds
+
+    raw_response = generate_digest(prompt)
+    digest = save_digest(raw_response, week, year)
+
+    if digest:
+        mark_articles_processed(week, year)
+
+if __name__ == "__main__":
+    run()
 # ─── CONFIG ───────────────────────────────────────────────
 
 NEON_URL = os.environ["NEON_POSTGRES_URL"]  # e.g., "postgres://user:pass@ep-cool-123456.us-east-2.aws.neon.tech/dbname"
