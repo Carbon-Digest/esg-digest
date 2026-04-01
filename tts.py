@@ -1,21 +1,21 @@
 import os
 import re
 import asyncio
+import requests
 from datetime import datetime, timezone
-from supabase import create_client
-import edge_tts
+import psycopg2  # for Neon
+from supabase import create_client  # for storage only
 
 # ─── CONFIG ───────────────────────────────────────────────
 
+NEON_URL = os.environ["NEON_POSTGRES_URL"]  # e.g., "postgres://user:pass@ep-cool-123456.../dbname"
 SUPABASE_URL = os.environ["SUPABASE_URL"]
 SUPABASE_KEY = os.environ["SUPABASE_KEY"]
+MISTRAL_KEY = os.environ["MISTRAL_API_KEY"]
 
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)  # Only for storage
 
-# British male neural voice — free, no account needed
-VOICE    = "en-GB-RyanNeural"
-
-# ─── STEP 1: FETCH LATEST UNPROCESSED DIGEST ──────────────
+# ─── STEP 1: FETCH LATEST UNPROCESSED DIGEST FROM NEON ──────────────
 
 def fetch_latest_digest():
     now = datetime.now(timezone.utc)
@@ -24,20 +24,38 @@ def fetch_latest_digest():
 
     print(f"Fetching digest for week {week}/{year}...")
 
-    result = supabase.table("digests") \
-        .select("id, title, script, week_number, year") \
-        .eq("week_number", week) \
-        .eq("year", year) \
-        .is_("audio_url", "null") \
-        .execute()
+    try:
+        conn = psycopg2.connect(NEON_URL)
+        cursor = conn.cursor()
 
-    if not result.data:
-        print("No unprocessed digest found for this week.")
+        cursor.execute("""
+            SELECT id, title, script, week_number, year
+            FROM digests
+            WHERE week_number = %s AND year = %s AND audio_url IS NULL
+        """, (week, year))
+
+        digest = cursor.fetchone()
+        if not digest:
+            print("No unprocessed digest found for this week.")
+            return None
+
+        # Convert to dict for compatibility
+        digest = {
+            "id": digest[0],
+            "title": digest[1],
+            "script": digest[2],
+            "week_number": digest[3],
+            "year": digest[4]
+        }
+        print(f"Found: {digest['title']}")
+        return digest
+
+    except Exception as e:
+        print(f"❌ Neon Error: {e}")
         return None
-
-    digest = result.data[0]
-    print(f"Found: {digest['title']}")
-    return digest
+    finally:
+        if 'conn' in locals():
+            conn.close()
 
 # ─── STEP 2: CLEAN SCRIPT FOR SPEECH ──────────────────────
 
@@ -47,18 +65,33 @@ def clean_script(script):
     script = re.sub(r'\s+', ' ', script).strip()
     return script
 
-# ─── STEP 3: GENERATE AUDIO WITH EDGE TTS ─────────────────
-
-async def generate_audio_async(text, filename):
-    communicate = edge_tts.Communicate(text, VOICE)
-    await communicate.save(filename)
+# ─── STEP 3: GENERATE AUDIO WITH MISTRAL VOXSTRAL TTS ─────────────────
 
 def generate_audio(digest):
     script = clean_script(digest["script"])
     filename = f"digest_w{digest['week_number']}_{digest['year']}.mp3"
 
-    print(f"Generating audio ({len(script)} chars) with {VOICE}...")
-    asyncio.run(generate_audio_async(script, filename))
+    print(f"Generating audio ({len(script)} chars) with Mistral Voxstral...")
+    headers = {
+        "Authorization": f"Bearer {MISTRAL_KEY}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "model": "voxtral-mini-tts-2603",
+        "input": script,
+        "response_format": "mp3"
+    }
+
+    response = requests.post(
+        "https://api.mistral.ai/v1/audio/speech",
+        headers=headers,
+        json=payload,
+        timeout=120
+    )
+    response.raise_for_status()
+
+    with open(filename, "wb") as f:
+        f.write(response.content)
 
     size_kb = os.path.getsize(filename) // 1024
     print(f"  ✓ Audio saved: {filename} ({size_kb} KB)")
@@ -82,12 +115,22 @@ def upload_audio(filename, digest):
 
     public_url = supabase.storage.from_("podcasts").get_public_url(storage_path)
 
-    supabase.table("digests") \
-        .update({"audio_url": public_url}) \
-        .eq("id", digest["id"]) \
-        .execute()
+    try:
+        conn = psycopg2.connect(NEON_URL)
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE digests
+            SET audio_url = %s
+            WHERE id = %s
+        """, (public_url, digest["id"]))
+        conn.commit()
+        print(f"  ✓ Public URL: {public_url}")
+    except Exception as e:
+        print(f"❌ Neon Update Error: {e}")
+    finally:
+        if 'conn' in locals():
+            conn.close()
 
-    print(f"  ✓ Public URL: {public_url}")
     return public_url
 
 # ─── MAIN ─────────────────────────────────────────────────
