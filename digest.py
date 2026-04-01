@@ -3,44 +3,15 @@ import json
 import psycopg2  # Use psycopg2 for PostgreSQL
 import requests
 from datetime import datetime, timezone
-import time  # Add this at the top of your script
+import time
 
-def run():
-    print("=" * 60)
-    print(f"ESG Digest Generator — {datetime.now().strftime('%Y-%m-%d %H:%M UTC')}")
-    print("=" * 60)
-
-    articles, week, year = fetch_weeks_articles()
-
-    if not articles:
-        print("No new articles this week. Exiting.")
-        return
-
-    enrichments = enrich_with_search(articles)
-    prompt = build_prompt(articles, enrichments)
-
-    # Add this delay to avoid 429 errors
-    print("Waiting to avoid Mistral rate limits...")
-    time.sleep(2)  # Wait 2 seconds
-
-    raw_response = generate_digest(prompt)
-    digest = save_digest(raw_response, week, year)
-
-    if digest:
-        mark_articles_processed(week, year)
-
-if __name__ == "__main__":
-    run()
 # ─── CONFIG ───────────────────────────────────────────────
-
 NEON_URL = os.environ["NEON_POSTGRES_URL"]  # e.g., "postgres://user:pass@ep-cool-123456.us-east-2.aws.neon.tech/dbname"
-
-MISTRAL_KEY   = os.environ["MISTRAL_API_KEY"]
+MISTRAL_KEY = os.environ["MISTRAL_API_KEY"]
 MISTRAL_MODEL = "mistral-small-latest"
-MISTRAL_URL   = "https://api.mistral.ai/v1/chat/completions"
+MISTRAL_URL = "https://api.mistral.ai/v1/chat/completions"
 
 # ─── STEP 1: FETCH THIS WEEK'S ARTICLES ───────────────────
-
 def fetch_weeks_articles():
     now = datetime.now(timezone.utc)
     iso = now.isocalendar()
@@ -53,13 +24,13 @@ def fetch_weeks_articles():
         cursor = conn.cursor()
 
         cursor.execute("""
-            SELECT source_label, title, url, body_text, published_at
+            SELECT source_label, title, url, body_text, published_at, week_number, year
             FROM articles
             WHERE week_number = %s AND year = %s AND processed = FALSE
         """, (week, year))
 
         articles = cursor.fetchall()
-        articles = [dict(zip(['source_label', 'title', 'url', 'body_text', 'published_at'], row)) for row in articles]
+        articles = [dict(zip(['source_label', 'title', 'url', 'body_text', 'published_at', 'week_number', 'year'], row)) for row in articles]
         print(f"Found {len(articles)} articles.")
         return articles, week, year
 
@@ -71,8 +42,6 @@ def fetch_weeks_articles():
             conn.close()
 
 # ─── STEP 2: WEB SEARCH FOR ENRICHMENT ───────────────────
-# Uses DuckDuckGo — no API key needed
-
 def web_search(query):
     try:
         r = requests.get(
@@ -96,10 +65,10 @@ def enrich_with_search(themes):
     print("Enriching themes with web search...")
     enrichments = {}
     search_queries = [
-        "ESG reporting standards",
-        "carbon markets CBAM",
-        "climate finance",
-        "greenhouse gas protocol",
+        "ESG reporting standards 2026 latest news",
+        "carbon markets CBAM update 2026",
+        "climate finance developments March 2026",
+        "sustainability disclosure regulations 2026",
     ]
     for q in search_queries:
         result = web_search(q)
@@ -108,7 +77,6 @@ def enrich_with_search(themes):
     return enrichments
 
 # ─── STEP 3: BUILD PROMPT ─────────────────────────────────
-
 def build_prompt(articles, enrichments):
     articles_text = ""
     for i, a in enumerate(articles, 1):
@@ -167,7 +135,6 @@ LATEST WEB SEARCH ENRICHMENT:
     return prompt
 
 # ─── STEP 4: CALL MISTRAL ─────────────────────────────────
-
 def generate_digest(prompt):
     print(f"Sending to Mistral ({MISTRAL_MODEL})...")
 
@@ -192,7 +159,6 @@ def generate_digest(prompt):
         raise
 
 # ─── STEP 5: PARSE AND SAVE ───────────────────────────────
-
 def save_digest(raw_response, week, year):
     clean = raw_response.replace("```json", "").replace("```", "").strip()
 
@@ -238,7 +204,6 @@ def save_digest(raw_response, week, year):
     return digest
 
 # ─── STEP 6: MARK ARTICLES AS PROCESSED ───────────────────
-
 def mark_articles_processed(week, year):
     try:
         conn = psycopg2.connect(NEON_URL)
@@ -260,7 +225,6 @@ def mark_articles_processed(week, year):
             conn.close()
 
 # ─── MAIN ─────────────────────────────────────────────────
-
 def run():
     print("=" * 60)
     print(f"ESG Digest Generator — {datetime.now().strftime('%Y-%m-%d %H:%M UTC')}")
@@ -274,11 +238,7 @@ def run():
 
     enrichments = enrich_with_search(articles)
     prompt = build_prompt(articles, enrichments)
-    raw_response = generate_digest(prompt)
-    digest = save_digest(raw_response, week, year)
 
-    if digest:
-        mark_articles_processed(week, year)
-
-if __name__ == "__main__":
-    run()
+    # Add this delay to avoid 429 errors
+    print("Waiting to avoid Mistral rate limits...")
+    time.sleep(2)  # Wait 2 seconds
