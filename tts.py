@@ -1,19 +1,13 @@
 import os
 import re
-import asyncio
 import requests
 from datetime import datetime, timezone
-import psycopg2  # for Neon
-from supabase import create_client  # for storage only
+import psycopg2
 
 # ─── CONFIG ───────────────────────────────────────────────
 
 NEON_URL = os.environ["NEON_POSTGRES_URL"]  # e.g., "postgres://user:pass@ep-cool-123456.../dbname"
-SUPABASE_URL = os.environ["SUPABASE_URL"]
-SUPABASE_KEY = os.environ["SUPABASE_KEY"]
 MISTRAL_KEY = os.environ["MISTRAL_API_KEY"]
-
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)  # Only for storage
 
 # ─── STEP 1: FETCH LATEST UNPROCESSED DIGEST FROM NEON ──────────────
 
@@ -77,7 +71,7 @@ def generate_audio(digest):
         "Content-Type": "application/json"
     }
     payload = {
-        "model": "voxtral-mini-tts-2603",
+        "model": "voxstral-mini-tts-2603",
         "input": script,
         "response_format": "mp3"
     }
@@ -97,41 +91,31 @@ def generate_audio(digest):
     print(f"  ✓ Audio saved: {filename} ({size_kb} KB)")
     return filename
 
-# ─── STEP 4: UPLOAD TO SUPABASE STORAGE ───────────────────
+# ─── STEP 4: STORE AUDIO IN NEON (BYTES) ───────────────────
 
 def upload_audio(filename, digest):
-    print(f"Uploading {filename} to Supabase Storage...")
-
-    storage_path = f"episodes/{filename}"
-
-    with open(filename, "rb") as f:
-        audio_bytes = f.read()
-
-    supabase.storage.from_("podcasts").upload(
-        path=storage_path,
-        file=audio_bytes,
-        file_options={"content-type": "audio/mpeg"}
-    )
-
-    public_url = supabase.storage.from_("podcasts").get_public_url(storage_path)
+    print(f"Uploading {filename} to Neon (BYTES column)...")
 
     try:
+        with open(filename, "rb") as f:
+            audio_bytes = f.read()
+
         conn = psycopg2.connect(NEON_URL)
         cursor = conn.cursor()
+
         cursor.execute("""
             UPDATE digests
-            SET audio_url = %s
+            SET audio_bytes = %s
             WHERE id = %s
-        """, (public_url, digest["id"]))
+        """, (psycopg2.Binary(audio_bytes), digest["id"]))
         conn.commit()
-        print(f"  ✓ Public URL: {public_url}")
+
+        print(f"  ✓ Audio stored in Neon!")
     except Exception as e:
         print(f"❌ Neon Update Error: {e}")
     finally:
         if 'conn' in locals():
             conn.close()
-
-    return public_url
 
 # ─── MAIN ─────────────────────────────────────────────────
 
@@ -145,9 +129,9 @@ def run():
         return
 
     filename = generate_audio(digest)
-    public_url = upload_audio(filename, digest)
+    upload_audio(filename, digest)
 
-    print(f"\n✅ Done! Listen at: {public_url}")
+    print(f"\n✅ Done! Audio stored in Neon.")
 
 if __name__ == "__main__":
     run()
