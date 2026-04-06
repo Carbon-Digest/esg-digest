@@ -23,26 +23,38 @@ MAX_ARTICLES_PER_SOURCE = 5
 
 # ─── DB HELPER ────────────────────────────────────────────
 
-def get_conn():
-    return psycopg2.connect(NEON_URL)
+def get_existing_urls(conn):
+    """Fetch all existing URLs in one query to avoid per-article DB lookups."""
+    cur = conn.cursor()
+    cur.execute("SELECT url FROM articles")
+    urls = {row[0] for row in cur.fetchall()}
+    cur.close()
+    return urls
 
-def save_article(source_label, title, url, published_at, body_text):
-    try:
-        conn = get_conn()
-        cur  = conn.cursor()
-        cur.execute("SELECT id FROM articles WHERE url = %s", (url,))
-        if cur.fetchone():
-            print(f"  ~ Skipping (exists): {title[:60]}")
-            cur.close(); conn.close()
-            return
-        cur.execute("""
-            SELECT COUNT(*) FROM articles
-            WHERE source_label = %s AND week_number = %s
-        """, (source_label, TARGET_WEEK))
-        if cur.fetchone()[0] >= MAX_ARTICLES_PER_SOURCE:
-            print(f"  ~ Limit reached for {source_label}")
-            cur.close(); conn.close()
-            return
+def get_source_counts(conn):
+    """Fetch article counts per source this week in one query."""
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT source_label, COUNT(*) FROM articles
+        WHERE week_number = %s GROUP BY source_label
+    """, (TARGET_WEEK,))
+    counts = {row[0]: row[1] for row in cur.fetchall()}
+    cur.close()
+    return counts
+
+def save_all_articles(articles):
+    """Save all articles in a single DB connection with one commit."""
+    conn = get_conn()
+    cur  = conn.cursor()
+    existing_urls  = get_existing_urls(conn)
+    source_counts  = get_source_counts(conn)
+    saved = 0
+
+    for source_label, title, url, published_at, body_text in articles:
+        if url in existing_urls:
+            continue
+        if source_counts.get(source_label, 0) >= MAX_ARTICLES_PER_SOURCE:
+            continue
         cur.execute("""
             INSERT INTO articles
                 (source_label, title, url, published_at, body_text,
@@ -55,15 +67,15 @@ def save_article(source_label, title, url, published_at, body_text):
             TARGET_WEEK, TARGET_YEAR,
             datetime.now(timezone.utc).isoformat()
         ))
-        conn.commit()
-        print(f"  ✓ Saved: {title[:70]}")
-    except Exception as e:
-        print(f"  ✗ DB error: {e}")
-    finally:
-        try:
-            cur.close(); conn.close()
-        except Exception:
-            pass
+        existing_urls.add(url)
+        source_counts[source_label] = source_counts.get(source_label, 0) + 1
+        print(f"  ✓ Saved [{source_label}]: {title[:60]}")
+        saved += 1
+
+    conn.commit()
+    cur.close()
+    conn.close()
+    print(f"\nSaved {saved} new articles.")
 
 def scrape_text(url):
     """Fetch plain text from a URL — used only for RSS sources with no body."""
@@ -188,11 +200,8 @@ def run():
     print("=" * 60)
 
     all_articles = run_all_sources()
-    print(f"\nSaving {len(all_articles)} candidate articles...")
-
-    for args in all_articles:
-        save_article(*args)
-
+    print(f"\nCollected {len(all_articles)} candidate articles.")
+    save_all_articles(all_articles)
     print("\n✅ Done.")
 
 if __name__ == "__main__":
