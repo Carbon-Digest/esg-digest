@@ -10,7 +10,7 @@
     <itunes:author>ESG Digest</itunes:author>
     <itunes:owner>
       <itunes:name>ESG Digest</itunes:name>
-      <itunes:email></itunes:email>
+      <itunes:email>parciald2012@gmail.com</itunes:email>
     </itunes:owner>
     <itunes:category text="Business">
       <itunes:category text="Non-Profit"/>
@@ -18,17 +18,17 @@
     <itunes:explicit>false</itunes:explicit>
     <itunes:type>episodic</itunes:type>
     <itunes:image href="https://placehold.co/1400x1400/166534/ffffff/png?text=ESG+Briefing"/>
-    <lastBuildDate>Mon, 06 Apr 2026 13:43:25 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 06 Apr 2026 14:04:03 +0000</lastBuildDate>
     
     <item>
       <title>The Climate Digest — Week 13, 2026</title>
       <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-13-2026/digest_w13_2026.mp3</link>
-      <description>This week’s digest covers India’s new 2035 climate pledge, SBTi’s updated FLAG guidance and automotive net-zero consultation, funding shifts in carbon removal, and new adaptation tools from Europe. Regulatory and market developments in carbon pricing, geothermal energy, and ocean innovation round out the briefing.</description>
-      <enclosure url="https://github.com/Carbon-Digest/esg-digest/releases/download/week-13-2026/digest_w13_2026.mp3" length="3206448" type="audio/mpeg"/>
+      <description>India raises its 2035 climate ambition with new targets, SBTi updates FLAG guidance and launches automotive net-zero consultation, and blue carbon markets face a critical tension between scientific rigor and scalability. Meanwhile, Europe accelerates adaptation with early warning systems and AI-driven climate tools.</description>
+      <enclosure url="https://github.com/Carbon-Digest/esg-digest/releases/download/week-13-2026/digest_w13_2026.mp3" length="3675456" type="audio/mpeg"/>
       <guid isPermaLink="false">https://github.com/Carbon-Digest/esg-digest/releases/download/week-13-2026/digest_w13_2026.mp3</guid>
-      <pubDate>Mon, 06 Apr 2026 13:42:28 +0000</pubDate>
+      <pubDate>Mon, 06 Apr 2026 14:02:53 +0000</pubDate>
       <itunes:duration>1200</itunes:duration>
-      <itunes:summary>This week’s digest covers India’s new 2035 climate pledge, SBTi’s updated FLAG guidance and automotive net-zero consultation, funding shifts in carbon removal, and new adaptation tools from Europe. Regulatory and market developments in carbon pricing, geothermal energy, and ocean innovation round out the briefing.</itunes:summary>
+      <itunes:summary>India raises its 2035 climate ambition with new targets, SBTi updates FLAG guidance and launches automotive net-zero consultation, and blue carbon markets face a critical tension between scientific rigor and scalability. Meanwhile, Europe accelerates adaptation with early warning systems and AI-driven climate tools.</itunes:summary>
       <itunes:explicit>false</itunes:explicit>
     </item>
   </channel>
