@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"
+  xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"
+  xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>The Climate Digest</title>
+    <description>Your weekly AI-generated briefing on sustainability, climate finance, carbon accounting, and non-financial reporting.</description>
+    <link>https://Carbon-Digest.github.io/esg-digest/feed.xml</link>
+    <language>en-gb</language>
+    <itunes:author>ESG Digest</itunes:author>
+    <itunes:owner>
+      <itunes:name>ESG Digest</itunes:name>
+      <itunes:email>your@email.com</itunes:email>
+    </itunes:owner>
+    <itunes:category text="Business">
+      <itunes:category text="Non-Profit"/>
+    </itunes:category>
+    <itunes:explicit>false</itunes:explicit>
+    <itunes:type>episodic</itunes:type>
+    <itunes:image href="https://placehold.co/1400x1400/166534/ffffff/png?text=ESG+Briefing"/>
+    <lastBuildDate>Mon, 06 Apr 2026 03:40:07 +0000</lastBuildDate>
+    
+    <item>
+      <title>The Climate Digest — Week 14, 2026</title>
+      <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-14-2026/digest_w14_2026.mp3</link>
+      <description>This week’s digest covers India’s revised 2035 climate commitment, SBTi’s updated FLAG guidance and new governance steps, emerging risks in voluntary carbon markets, and fresh data on urban heat risks and European adaptation needs. Key regulatory and market signals from the WCI, Washington state, and EU early warning systems are also highlighted.</description>
+      <enclosure url="https://github.com/Carbon-Digest/esg-digest/releases/download/week-14-2026/digest_w14_2026.mp3" length="0" type="audio/mpeg"/>
+      <guid isPermaLink="false">https://github.com/Carbon-Digest/esg-digest/releases/download/week-14-2026/digest_w14_2026.mp3</guid>
+      <pubDate>Mon, 06 Apr 2026 03:38:47 +0000</pubDate>
+      <itunes:duration>1200</itunes:duration>
+      <itunes:summary>This week’s digest covers India’s revised 2035 climate commitment, SBTi’s updated FLAG guidance and new governance steps, emerging risks in voluntary carbon markets, and fresh data on urban heat risks and European adaptation needs. Key regulatory and market signals from the WCI, Washington state, and EU early warning systems are also highlighted.</itunes:summary>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
+  </channel>
+</rss>
