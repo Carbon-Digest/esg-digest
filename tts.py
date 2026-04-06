@@ -3,7 +3,6 @@ import re
 import asyncio
 import requests
 import psycopg2
-import psycopg2.extras
 from datetime import datetime, timezone
 import edge_tts
 
@@ -20,17 +19,16 @@ def get_conn():
 # ─── STEP 1: FETCH LATEST UNPROCESSED DIGEST ──────────────
 
 def fetch_latest_digest():
-    now  = datetime.now(timezone.utc)
-    iso  = now.isocalendar()
-    week, year = iso[1], iso[0]
-    print(f"Fetching digest for week {week}/{year}...")
+    print(f"Fetching digest for week {TARGET_WEEK}/{TARGET_YEAR}...")
     conn = get_conn()
     cur  = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cur.execute("""
         SELECT id, title, script, week_number, year
         FROM digests
-        WHERE week_number = %s AND year = %s AND audio_url IS NULL
-    """, (week, year))
+        WHERE week_number = %s AND year = %s
+        ORDER BY created_at DESC
+        LIMIT 1
+    """, (TARGET_WEEK, TARGET_YEAR))
     digest = cur.fetchone()
     cur.close(); conn.close()
     if not digest:
@@ -73,7 +71,24 @@ def upload_to_github_release(filename, digest):
         "X-GitHub-Api-Version": "2022-11-28"
     }
 
-    # Create the release
+    # Delete existing release for this week if it exists
+    r = requests.get(
+        f"https://api.github.com/repos/{GITHUB_REPO}/releases/tags/{tag}",
+        headers=headers
+    )
+    if r.status_code == 200:
+        release_id = r.json()["id"]
+        print(f"  Deleting existing release {tag}...")
+        requests.delete(
+            f"https://api.github.com/repos/{GITHUB_REPO}/releases/{release_id}",
+            headers=headers
+        )
+        requests.delete(
+            f"https://api.github.com/repos/{GITHUB_REPO}/git/refs/tags/{tag}",
+            headers=headers
+        )
+
+    # Create fresh release
     print(f"Creating GitHub Release: {tag}...")
     r = requests.post(
         f"https://api.github.com/repos/{GITHUB_REPO}/releases",
@@ -91,17 +106,14 @@ def upload_to_github_release(filename, digest):
     upload_url  = release["upload_url"].replace("{?name,label}", "")
     release_url = release["html_url"]
 
-    # Upload MP3 as release asset
+    # Upload MP3
     print(f"Uploading MP3 to release...")
     with open(filename, "rb") as f:
         mp3_data = f.read()
 
     r = requests.post(
         upload_url,
-        headers={
-            **headers,
-            "Content-Type": "audio/mpeg"
-        },
+        headers={**headers, "Content-Type": "audio/mpeg"},
         params={"name": filename},
         data=mp3_data
     )
