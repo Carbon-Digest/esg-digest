@@ -104,7 +104,7 @@ TASK:
 6. Write a concise podcast script of approximately 2,500–3,500 words for an expert audience
 
 SCRIPT STRUCTURE:
-- [INTRO] Keep it short — 3 sentences maximum. Open with: "This is the Climate Digest, an AI-generated weekly briefing on sustainability, climate finance, and non-financial reporting. Week [X], [YEAR]. This week: [topic 1], [topic 2], and [topic 3]."
+- [INTRO] Keep it short — 3 sentences maximum. Open with: "This is the Climate Digest, an AI-generated weekly briefing on sustainability, climate finance, and non-financial reporting. Week [X], [YEAR]. This week: [topic 1], [topic 2], and [topic 3]." you can use other versions of this keeping the core info.
 - [SECTIONS] One section per major theme. Transitions between sections should be a single smooth sentence — no abrupt stops. Vary transition phrases so they don't feel repetitive.
 - [SOURCE MENTIONS] Attribute clearly but naturally within the flow of the sentence. Never start two consecutive sentences with a source name.
 - [OUTRO] Two sentences maximum: "That concludes this week's Climate Digest, compiled automatically from [sources]. Links in the show notes."
@@ -146,7 +146,8 @@ def generate_digest(prompt):
         "model": MISTRAL_MODEL,
         "messages": [{"role": "user", "content": prompt}],
         "max_tokens": 8000,
-        "temperature": 0.4
+        "temperature": 0.4,
+        "response_format": {"type": "json_object"}
     }
     r = requests.post(MISTRAL_URL, headers=headers, json=payload, timeout=120)
     r.raise_for_status()
@@ -155,33 +156,35 @@ def generate_digest(prompt):
 # ─── STEP 5: PARSE AND SAVE ───────────────────────────────
 
 def save_digest(raw_response, week, year):
-    clean = raw_response.replace("```json", "").replace("```", "").strip()
+    clean = raw_response.strip()
 
-    # Fix common control character issues before parsing
-    import re
-    clean = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f]', '', clean)  # remove bad control chars
-    clean = clean.replace('\n', '\\n').replace('\r', '\\r').replace('\t', '\\t')
+    # Remove markdown fences if present
+    clean = clean.replace("```json", "").replace("```", "").strip()
 
-    # But don't double-escape already escaped sequences
-    clean = clean.replace('\\\\n', '\\n').replace('\\\\r', '\\r').replace('\\\\t', '\\t')
-
+    # Try direct parse first
     try:
         digest = json.loads(clean)
     except json.JSONDecodeError:
-        # Last resort: extract fields manually with regex
+        # Strip control characters and try again
+        import re
+        clean2 = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f]', '', clean)
         try:
-            title   = re.search(r'"title"\s*:\s*"([^"]+)"', clean).group(1)
-            summary = re.search(r'"summary"\s*:\s*"([^"]+)"', clean).group(1)
-            themes  = re.findall(r'"([^"]+)"', re.search(r'"themes"\s*:\s*\[([^\]]+)\]', clean).group(1))
-            script  = re.search(r'"script"\s*:\s*"(.*?)"\s*}', clean, re.DOTALL).group(1)
-            digest  = {"title": title, "summary": summary, "themes": themes, "script": script}
-            print("Recovered digest via regex fallback.")
-        except Exception as e:
-            print(f"Could not recover digest: {e}")
-            with open("digest_raw.txt", "w") as f:
-                f.write(raw_response)
-            print("Raw response saved to digest_raw.txt")
-            return None
+            digest = json.loads(clean2)
+        except json.JSONDecodeError:
+            # Last resort: find the JSON object boundaries
+            try:
+                start = clean2.index('{')
+                end   = clean2.rindex('}') + 1
+                digest = json.loads(clean2[start:end])
+            except Exception as e:
+                print(f"All parse attempts failed: {e}")
+                print(f"--- RAW RESPONSE (first 500 chars) ---")
+                print(raw_response[:500])
+                print(f"--------------------------------------")
+                with open("digest_raw.txt", "w") as f:
+                    f.write(raw_response)
+                print("Full response saved to digest_raw.txt")
+                return None
 
     # Override title with correct week regardless of what Mistral wrote
     digest["title"] = f"The Climate Digest — Week {week}, {year}"
