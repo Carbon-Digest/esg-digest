@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime, timezone, timedelta
 import os
 import psycopg2
+import psycopg2.extras
 from psycopg2.extras import RealDictCursor
 
 # ─── CONFIG ───────────────────────────────────────────────
