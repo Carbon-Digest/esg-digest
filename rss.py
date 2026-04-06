@@ -1,6 +1,7 @@
 import os
 import requests
 import psycopg2
+import psycopg2.extras
 from datetime import datetime, timezone
 from xml.sax.saxutils import escape
 
