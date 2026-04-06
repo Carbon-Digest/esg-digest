@@ -23,6 +23,11 @@ MAX_ARTICLES_PER_SOURCE = 5
 
 # ─── DB HELPER ────────────────────────────────────────────
 
+# ─── DB HELPER ────────────────────────────────────────────
+
+def get_conn():
+    return psycopg2.connect(NEON_URL)
+
 def get_existing_urls(conn):
     """Fetch all existing URLs in one query to avoid per-article DB lookups."""
     cur = conn.cursor()
@@ -113,12 +118,12 @@ def fetch_rss(label, feed_url, filter_fn=None):
         print(f"  ✗ Error: {e}")
     return results
 
-def fetch_scrape(label, url, link_selector, base_url):
+def fetch_scrape(label, url, link_selector, base_url, timeout=20):
     """Generic page scraper — uses title + excerpt from listing page only, no individual fetches."""
     print(f"\n→ {label}")
     results = []
     try:
-        r    = requests.get(url, headers=HEADERS, timeout=20)
+        r    = requests.get(url, headers=HEADERS, timeout=timeout)
         soup = BeautifulSoup(r.text, "html.parser")
         seen = set()
         for a in soup.select(link_selector):
@@ -151,7 +156,7 @@ def run_all_sources():
         lambda: fetch_scrape("GHG Protocol", "https://ghgprotocol.org/blog",
                              "a[href*='/blog/']", "https://ghgprotocol.org"),
         lambda: fetch_scrape("Carbon Tracker", "https://carbontracker.org/reports/",
-                             "a[href*='/reports/']", "https://carbontracker.org"),
+                             "a[href*='/reports/']", "https://carbontracker.org", timeout=30),
         lambda: fetch_scrape("PCAF", "https://carbonaccountingfinancials.com/news",
                              "a[href*='/news']", "https://carbonaccountingfinancials.com"),
         lambda: fetch_climate_adapt(),
