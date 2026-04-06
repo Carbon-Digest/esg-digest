@@ -11,8 +11,8 @@ NEON_URL       = os.environ["NEON_POSTGRES_URL"]
 GITHUB_TOKEN   = os.environ["GITHUB_TOKEN"]
 GITHUB_REPO    = os.environ["GITHUB_REPOSITORY"]
 
-PODCAST_TITLE       = "The ESG and Climate Briefing"
-PODCAST_DESCRIPTION = "Your weekly AI-generated digest of the most important developments in sustainability, climate finance, carbon accounting, and non-financial reporting."
+PODCAST_TITLE       = "The Climate Digest"
+PODCAST_DESCRIPTION = "Your weekly AI-generated briefing on sustainability, climate finance, carbon accounting, and non-financial reporting."
 PODCAST_AUTHOR      = "ESG Digest"
 PODCAST_EMAIL       = "your@email.com"   # ← replace with your email
 PODCAST_LANGUAGE    = "en-gb"
@@ -112,58 +112,43 @@ def build_rss(episodes, feed_url):
   </channel>
 </rss>""".strip()
 
-# ─── STEP 5: UPLOAD RSS AS GITHUB RELEASE ASSET ───────────
+# ─── STEP 5: COMMIT FEED.XML TO REPO (served via GitHub Pages) ───
 
 def upload_rss(rss_content):
-    tag     = "podcast-rss-feed"
-    headers = {
+    filename  = "feed.xml"
+    headers   = {
         "Authorization": f"Bearer {GITHUB_TOKEN}",
         "Accept": "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28"
     }
 
-    # Check if release already exists and delete it
+    # Check if file already exists to get its SHA (required for updates)
     r = requests.get(
-        f"https://api.github.com/repos/{GITHUB_REPO}/releases/tags/{tag}",
+        f"https://api.github.com/repos/{GITHUB_REPO}/contents/{filename}",
         headers=headers
     )
-    if r.status_code == 200:
-        release_id = r.json()["id"]
-        requests.delete(
-            f"https://api.github.com/repos/{GITHUB_REPO}/releases/{release_id}",
-            headers=headers
-        )
-        # Also delete the tag
-        requests.delete(
-            f"https://api.github.com/repos/{GITHUB_REPO}/git/refs/tags/{tag}",
-            headers=headers
-        )
+    sha = r.json().get("sha") if r.status_code == 200 else None
 
-    # Create fresh release for the RSS feed
-    r = requests.post(
-        f"https://api.github.com/repos/{GITHUB_REPO}/releases",
+    import base64
+    content_b64 = base64.b64encode(rss_content.encode("utf-8")).decode("utf-8")
+
+    payload = {
+        "message": "Update podcast RSS feed",
+        "content": content_b64,
+    }
+    if sha:
+        payload["sha"] = sha  # required when updating existing file
+
+    r = requests.put(
+        f"https://api.github.com/repos/{GITHUB_REPO}/contents/{filename}",
         headers=headers,
-        json={
-            "tag_name": tag,
-            "name": "Podcast RSS Feed",
-            "body": "This release contains the latest podcast RSS feed. Do not delete.",
-            "draft": False,
-            "prerelease": False
-        }
+        json=payload
     )
     r.raise_for_status()
-    upload_url = r.json()["upload_url"].replace("{?name,label}", "")
 
-    # Upload feed.xml
-    r = requests.post(
-        upload_url,
-        headers={**headers, "Content-Type": "text/xml; charset=utf-8"},
-        params={"name": "feed.xml"},
-        data=rss_content.encode("utf-8")
-    )
-    r.raise_for_status()
-    feed_url = r.json()["browser_download_url"]
-    print(f"  ✓ RSS feed uploaded: {feed_url}")
+    feed_url = f"https://{GITHUB_REPO.split('/')[0]}.github.io/{GITHUB_REPO.split('/')[1]}/{filename}"
+    print(f"  ✓ feed.xml committed to repo")
+    print(f"  ✓ RSS URL: {feed_url}")
     return feed_url
 
 # ─── MAIN ─────────────────────────────────────────────────
@@ -177,7 +162,7 @@ def run():
     if not episodes:
         print("No episodes with audio yet. Exiting.")
         return
-    feed_url    = f"https://github.com/{GITHUB_REPO}/releases/download/podcast-rss-feed/feed.xml"
+    feed_url    = f"https://{GITHUB_REPO.split('/')[0]}.github.io/{GITHUB_REPO.split('/')[1]}/feed.xml"
     rss_content = build_rss(episodes, feed_url)
     final_url   = upload_rss(rss_content)
     print(f"\n✅ RSS feed live at:\n   {final_url}")
