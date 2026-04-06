@@ -51,6 +51,7 @@ jobs:
           NEON_POSTGRES_URL: ${{ secrets.NEON_POSTGRES_URL }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
+          PODCAST_EMAIL: ${{ secrets.PODCAST_EMAIL }}
           TARGET_WEEK: ${{ inputs.week_number }}
           TARGET_YEAR: ${{ inputs.year }}
         run: python tts.py
