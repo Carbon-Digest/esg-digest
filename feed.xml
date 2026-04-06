@@ -18,8 +18,19 @@
     <itunes:explicit>false</itunes:explicit>
     <itunes:type>episodic</itunes:type>
     <itunes:image href="https://placehold.co/1400x1400/166534/ffffff/png?text=ESG+Briefing"/>
-    <lastBuildDate>Mon, 06 Apr 2026 14:04:03 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 06 Apr 2026 14:25:34 +0000</lastBuildDate>
     
+    <item>
+      <title>The Climate Digest — Week 14, 2026</title>
+      <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-14-2026/digest_w14_2026.mp3</link>
+      <description>This week’s Climate Digest covers SBTi’s sector-specific net-zero standards for power and chemicals, China’s nuclear offset methodology under CCER, EU biodiversity funding via EIB, and market movements in WCI allowances. Regulatory shifts in the US and personnel changes at WRI also feature.</description>
+      <enclosure url="https://github.com/Carbon-Digest/esg-digest/releases/download/week-14-2026/digest_w14_2026.mp3" length="2623392" type="audio/mpeg"/>
+      <guid isPermaLink="false">https://github.com/Carbon-Digest/esg-digest/releases/download/week-14-2026/digest_w14_2026.mp3</guid>
+      <pubDate>Mon, 06 Apr 2026 14:24:48 +0000</pubDate>
+      <itunes:duration>1200</itunes:duration>
+      <itunes:summary>This week’s Climate Digest covers SBTi’s sector-specific net-zero standards for power and chemicals, China’s nuclear offset methodology under CCER, EU biodiversity funding via EIB, and market movements in WCI allowances. Regulatory shifts in the US and personnel changes at WRI also feature.</itunes:summary>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
     <item>
       <title>The Climate Digest — Week 13, 2026</title>
       <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-13-2026/digest_w13_2026.mp3</link>
