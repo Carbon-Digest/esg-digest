@@ -26,13 +26,26 @@ ONE_WEEK_AGO = datetime(TARGET_YEAR, 1, 1, tzinfo=timezone.utc) + \
 def get_conn():
     return psycopg2.connect(NEON_URL)
 
+MAX_ARTICLES_PER_SOURCE = 5
+
 def save_article(source_label, title, url, published_at, body_text):
     try:
         conn = get_conn()
         cur = conn.cursor()
+        # Check if URL exists
         cur.execute("SELECT id FROM articles WHERE url = %s", (url,))
         if cur.fetchone():
             print(f"  ~ Skipping (exists): {title[:60]}")
+            cur.close(); conn.close()
+            return
+        # Check how many articles we already have from this source this week
+        cur.execute("""
+            SELECT COUNT(*) FROM articles
+            WHERE source_label = %s AND week_number = %s
+        """, (source_label, TARGET_WEEK))
+        count = cur.fetchone()[0]
+        if count >= MAX_ARTICLES_PER_SOURCE:
+            print(f"  ~ Skipping (limit reached for {source_label}): {title[:60]}")
             cur.close(); conn.close()
             return
         now = datetime.now(timezone.utc)
