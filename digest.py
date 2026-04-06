@@ -89,26 +89,34 @@ Content: {str(a['body_text'])[:3000]}
         f"Search: {q}\nResult: {r}" for q, r in enrichments.items() if r
     )
 
-    return f"""You are an AI system that produces a weekly podcast called "The ESG and Climate Briefing" — an automated, AI-generated digest for sustainability, climate finance, and non-financial reporting practitioners.
+    return f"""You are an AI system that produces a weekly podcast called "The Climate Digest" — an automated, AI-generated briefing for expert practitioners in sustainability, climate finance, carbon accounting, and non-financial reporting.
 
-Your tone is: factual, clear, and informative. You are not a human host — you are an AI summarising and synthesising information from trusted sources. You do not express opinions, use casual language, or pretend to have personal perspectives.
+Your audience are professionals who follow this space closely. Do not explain basic concepts. Do not provide background context unless it is directly relevant to understanding a new development. Assume the listener knows what CBAM, SBTi, GHG Protocol, ISSB, CSRD, and carbon markets are.
+
+Your tone is: concise, factual, and direct. Focus exclusively on what is NEW this week — new publications, new regulations, new data, new positions. If something happened more than 7 days ago and is not directly relevant to a current development, do not include it.
 
 TASK:
-1. Read all the articles below from this week's sources
-2. Identify key themes, grouping related stories together
-3. Eliminate repetition — synthesize overlapping stories into one richer account
-4. Weave in the web search enrichment results naturally where relevant
-5. Write a complete podcast script of approximately 3,500–4,500 words (shorter if quiet week)
+1. Read all the articles below — these are from the past 7 days only
+2. Identify only the genuinely new developments — ignore anything that is background, historical context, or older than this week
+3. Group related new developments into themes
+4. Eliminate repetition — if multiple sources cover the same story, synthesize into one account
+5. Use web search enrichment only to add the very latest context to current stories — not to add older background
+6. Write a concise podcast script of approximately 2,500–3,500 words for an expert audience
 
 SCRIPT STRUCTURE:
-- [INTRO] Always open with: "This is the ESG and Climate Briefing — an AI-generated digest of last week's most important developments in sustainability, climate finance, carbon accounting, and non-financial reporting. This is week [X] of [YEAR]. This week's digest covers [topic 1], [topic 2], and [topic 3]."
-- [SECTIONS] One section per major theme, with clear factual transitions
-- [SOURCE MENTIONS] Always attribute clearly: "The Science Based Targets initiative published...", "Carbon Brief reported...", "The GHG Protocol announced...", etc.
-- [OUTRO] Close with: "That concludes this week's ESG and Climate Briefing. This digest was compiled by an AI system from the following sources: [list sources used]. Source links are available in the show notes. This briefing is generated automatically each week."
+- [INTRO] Keep it short — 3 sentences maximum. Open with: "This is the Climate Digest, an AI-generated weekly briefing on sustainability, climate finance, and non-financial reporting. Week [X], [YEAR]. This week: [topic 1], [topic 2], and [topic 3]."
+- [SECTIONS] One section per major theme. Transitions between sections should be a single smooth sentence — no abrupt stops. Vary transition phrases so they don't feel repetitive.
+- [SOURCE MENTIONS] Attribute clearly but naturally within the flow of the sentence. Never start two consecutive sentences with a source name.
+- [OUTRO] Two sentences maximum: "That concludes this week's Climate Digest, compiled automatically from [sources]. Links in the show notes."
+
+WRITING STYLE:
+- Sentences should vary in length — mix short punchy statements with longer explanatory ones
+- Avoid repeating the same sentence structure back to back
+- Never use filler phrases like "it is worth noting", "it is important to mention", "as we can see"
+- Each paragraph should flow into the next with a clear logical connection
 
 FORMATTING RULES:
 - Write exactly as it will be spoken — no bullet points, no headers
-- Factual, clear, informative tone — no casual language or personal opinions
 - Mark meaningful pauses with [PAUSE]
 
 OUTPUT: Return ONLY a JSON object with no markdown fences:
@@ -184,8 +192,20 @@ def save_digest(raw_response, week, year):
 
 # ─── STEP 6: MARK ARTICLES PROCESSED ─────────────────────
 
-def cleanup_old_articles(week, year):
-    """Delete processed articles from previous weeks to stay within Neon's row limit."""
+def mark_articles_processed(week):
+    conn = get_conn()
+    cur  = conn.cursor()
+    cur.execute("""
+        UPDATE articles SET processed = TRUE
+        WHERE week_number = %s
+    """, (week,))
+    conn.commit()
+    cur.close(); conn.close()
+    print("Articles marked as processed.")
+
+# ─── STEP 7: CLEANUP OLD ARTICLES ────────────────────────
+
+def cleanup_old_articles(week):
     conn = get_conn()
     cur  = conn.cursor()
     cur.execute("""
@@ -197,17 +217,6 @@ def cleanup_old_articles(week, year):
     conn.commit()
     cur.close(); conn.close()
     print(f"Cleaned up {deleted} old articles.")
-
-
-    conn = get_conn()
-    cur  = conn.cursor()
-    cur.execute("""
-        UPDATE articles SET processed = TRUE
-        WHERE week_number = %s AND year = %s
-    """, (week, year))
-    conn.commit()
-    cur.close(); conn.close()
-    print("Articles marked as processed.")
 
 # ─── MAIN ─────────────────────────────────────────────────
 
@@ -224,8 +233,8 @@ def run():
     raw         = generate_digest(prompt)
     digest      = save_digest(raw, week, year)
     if digest:
-        mark_articles_processed(week, year)
-        cleanup_old_articles(week, year)
+        mark_articles_processed(week)
+        cleanup_old_articles(week)
 
 if __name__ == "__main__":
     run()
