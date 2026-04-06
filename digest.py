@@ -25,14 +25,16 @@ def get_conn():
 
 def fetch_weeks_articles():
     print(f"Fetching articles for week {TARGET_WEEK}/{TARGET_YEAR}...")
+    # Override title with correct week regardless of what Mistral wrote
+    digest["title"] = f"The Climate Digest — Week {week}, {year}"
 
     conn = get_conn()
     cur  = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cur.execute("""
         SELECT source_label, title, url, body_text, published_at
         FROM articles
-        WHERE week_number = %s AND year = %s AND processed = FALSE
-    """, (TARGET_WEEK, TARGET_YEAR))
+        WHERE week_number = %s AND processed = FALSE
+    """, (TARGET_WEEK,))
     articles = cur.fetchall()
     cur.close(); conn.close()
     print(f"Found {len(articles)} articles.")
@@ -114,7 +116,7 @@ FORMATTING RULES:
 
 OUTPUT: Return ONLY a JSON object with no markdown fences:
 {{
-  "title": "The ESG and Climate Briefing — Week [X], [YEAR]",
+  "title": "The Climate Digest — Week [X], [YEAR]",
   "summary": "2-3 sentence plain text summary for show notes",
   "themes": ["theme 1", "theme 2", "theme 3"],
   "script": "the full podcast script as a single string with paragraph breaks as \\n\\n"
@@ -159,7 +161,7 @@ def save_digest(raw_response, week, year):
         return None
 
     # Override title with correct week regardless of what Mistral wrote
-    digest["title"] = f"Climate Digest — Week {week}, {year}"
+    digest["title"] = f"The ESG and Climate Briefing — Week {week}, {year}"
 
     conn = get_conn()
     cur  = conn.cursor()
