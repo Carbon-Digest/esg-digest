@@ -25,6 +25,17 @@ def get_conn():
 
 def fetch_weeks_articles():
     print(f"Fetching articles for week {TARGET_WEEK}/{TARGET_YEAR}...")
+
+    # Check if digest already exists for this week
+    conn = get_conn()
+    cur  = conn.cursor()
+    cur.execute("SELECT id FROM digests WHERE week_number = %s", (TARGET_WEEK,))
+    if cur.fetchone():
+        print(f"Digest already exists for week {TARGET_WEEK} — skipping.")
+        cur.close(); conn.close()
+        return [], TARGET_WEEK, TARGET_YEAR
+    cur.close(); conn.close()
+
     conn = get_conn()
     cur  = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cur.execute("""
@@ -104,7 +115,7 @@ TASK:
 6. Write a concise podcast script of approximately 2,500–3,500 words for an expert audience
 
 SCRIPT STRUCTURE:
-- [INTRO] Keep it short — 3 sentences maximum. Open with: "This is the Climate Digest, an AI-generated weekly briefing on sustainability, climate finance, and non-financial reporting. Week [X], [YEAR]. This week: [topic 1], [topic 2], and [topic 3]." you can use other versions of this keeping the core info.
+- [INTRO] Keep it short — 3 sentences maximum. Open with: "This is the Climate Digest, an AI-generated weekly briefing on sustainability, climate finance, and non-financial reporting. Week [X], [YEAR]. This week: [topic 1], [topic 2], and [topic 3]."
 - [SECTIONS] One section per major theme. Transitions between sections should be a single smooth sentence — no abrupt stops. Vary transition phrases so they don't feel repetitive.
 - [SOURCE MENTIONS] Attribute clearly but naturally within the flow of the sentence. Never start two consecutive sentences with a source name.
 - [OUTRO] Two sentences maximum: "That concludes this week's Climate Digest, compiled automatically from [sources]. Links in the show notes."
