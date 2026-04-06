@@ -199,21 +199,80 @@ def fetch_kolum():
     label = "Kolum CBAM Weekly"
     print(f"\n→ {label}")
     try:
-        r = requests.get("https://www.kolum.earth/en/cbam/weekly", headers=HEADERS, timeout=15)
-        soup = BeautifulSoup(r.text, "html.parser")
-        for tag in soup(["nav", "footer", "script", "style", "header"]):
-            tag.decompose()
-        body = soup.get_text(separator=" ", strip=True)
+        from playwright.sync_api import sync_playwright
+        with sync_playwright() as p:
+            browser = p.chromium.launch()
+            page    = browser.new_page()
+            page.goto("https://www.kolum.earth/en/cbam/weekly", timeout=30000)
+            page.wait_for_timeout(3000)  # wait for JS to render
+            body = page.inner_text("body")
+            browser.close()
         if len(body) > 300:
             save_article(label, f"CBAM Weekly — {datetime.now().strftime('%Y-W%V')}",
                          "https://www.kolum.earth/en/cbam/weekly",
                          datetime.now(timezone.utc), body)
         else:
-            print("  ⚠ Kolum appears JS-rendered — content too short.")
+            print("  ⚠ Kolum content still too short after JS render.")
+    except Exception as e:
+        print(f"  ✗ Kolum error: {e}")
+
+# ─── 8. CARBON PULSE ─────────────────────────────────────
+
+def fetch_carbon_pulse():
+    label = "Carbon Pulse"
+    print(f"\n→ {label}")
+    feed = feedparser.parse("https://carbon-pulse.com/feed")
+    for entry in feed.entries:
+        pub = entry.get("published_parsed")
+        pub_dt = datetime(*pub[:6], tzinfo=timezone.utc) if pub else None
+        if pub_dt and pub_dt < ONE_WEEK_AGO:
+            continue
+        body = BeautifulSoup(
+            entry.get("summary", ""), "html.parser"
+        ).get_text(separator=" ", strip=True)
+        save_article(label, entry.title, entry.link, pub_dt, body)
+
+# ─── 9. CARBON TRACKER ───────────────────────────────────
+
+def fetch_carbon_tracker():
+    label = "Carbon Tracker"
+    print(f"\n→ {label}")
+    try:
+        r    = requests.get("https://carbontracker.org/reports/", headers=HEADERS, timeout=15)
+        soup = BeautifulSoup(r.text, "html.parser")
+        seen = set()
+        for a in soup.select("a[href*='/reports/']"):
+            title = a.get_text(strip=True)
+            href  = a.get("href", "")
+            if not title or len(title) < 15 or href in seen:
+                continue
+            seen.add(href)
+            url  = href if href.startswith("http") else "https://carbontracker.org" + href
+            body = fetch_article_body(url)
+            save_article(label, title, url, datetime.now(timezone.utc), body)
     except Exception as e:
         print(f"  ✗ Error: {e}")
 
-# ─── MAIN ─────────────────────────────────────────────────
+# ─── 10. PCAF ────────────────────────────────────────────
+
+def fetch_pcaf():
+    label = "PCAF"
+    print(f"\n→ {label}")
+    try:
+        r    = requests.get("https://carbonaccountingfinancials.com/news", headers=HEADERS, timeout=15)
+        soup = BeautifulSoup(r.text, "html.parser")
+        seen = set()
+        for a in soup.select("a[href*='/news']"):
+            title = a.get_text(strip=True)
+            href  = a.get("href", "")
+            if not title or len(title) < 15 or href in seen:
+                continue
+            seen.add(href)
+            url  = href if href.startswith("http") else "https://carbonaccountingfinancials.com" + href
+            body = fetch_article_body(url)
+            save_article(label, title, url, datetime.now(timezone.utc), body)
+    except Exception as e:
+        print(f"  ✗ Error: {e}")
 
 def run():
     print("=" * 60)
@@ -226,6 +285,9 @@ def run():
     fetch_climate_adapt()
     fetch_carbonbrief()
     fetch_kolum()
+    fetch_carbon_pulse()
+    fetch_carbon_tracker()
+    fetch_pcaf()
     print("\n✅ Done.")
 
 if __name__ == "__main__":
