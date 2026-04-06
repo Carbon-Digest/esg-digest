@@ -160,6 +160,9 @@ def save_digest(raw_response, week, year):
         print("Raw response saved to digest_raw.txt")
         return None
 
+    # Override title with correct week regardless of what Mistral wrote
+    digest["title"] = f"The ESG and Climate Briefing — Week {week}, {year}"
+
     conn = get_conn()
     cur  = conn.cursor()
     cur.execute("""
