@@ -3,6 +3,7 @@ import re
 import asyncio
 import requests
 import psycopg2
+import psycopg2.extras
 from datetime import datetime, timezone
 import edge_tts
 
