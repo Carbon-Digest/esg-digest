@@ -2,7 +2,7 @@ name: Weekly ESG Digest
 
 on:
   schedule:
-    - cron: '0 4 * * 1'   # Every Monday at 4:00 AM UTC
+    - cron: '0 5 * * 1'   # Every Monday at 5:00 AM UTC
   workflow_dispatch:
 
 jobs:
@@ -22,6 +22,9 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r requirements.txt
+
+      - name: Install Playwright browser
+        run: python -m playwright install chromium --with-deps
 
       - name: Run scraper
         env:
@@ -46,4 +49,5 @@ jobs:
           NEON_POSTGRES_URL: ${{ secrets.NEON_POSTGRES_URL }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
+          PODCAST_EMAIL: ${{ secrets.PODCAST_EMAIL }}
         run: python rss.py
