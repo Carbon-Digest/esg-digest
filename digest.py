@@ -67,7 +67,7 @@ def enrich_with_search():
         "ESG reporting standards latest",
         "carbon markets CBAM update",
         "climate finance developments",
-        "carbon accounting and net zero",
+        "carbon accounting net zero",
     ]
     enrichments = {}
     for q in queries:
@@ -161,7 +161,7 @@ def save_digest(raw_response, week, year):
         return None
 
     # Override title with correct week regardless of what Mistral wrote
-    digest["title"] = f"The ESG and Climate Briefing — Week {week}, {year}"
+    digest["title"] = f"The Climate Digest — Week {week}, {year}"
 
     conn = get_conn()
     cur  = conn.cursor()
@@ -187,7 +187,21 @@ def save_digest(raw_response, week, year):
 
 # ─── STEP 6: MARK ARTICLES PROCESSED ─────────────────────
 
-def mark_articles_processed(week, year):
+def cleanup_old_articles(week, year):
+    """Delete processed articles from previous weeks to stay within Neon's row limit."""
+    conn = get_conn()
+    cur  = conn.cursor()
+    cur.execute("""
+        DELETE FROM articles
+        WHERE processed = TRUE
+        AND week_number < %s
+    """, (week,))
+    deleted = cur.rowcount
+    conn.commit()
+    cur.close(); conn.close()
+    print(f"Cleaned up {deleted} old articles.")
+
+
     conn = get_conn()
     cur  = conn.cursor()
     cur.execute("""
@@ -214,6 +228,7 @@ def run():
     digest      = save_digest(raw, week, year)
     if digest:
         mark_articles_processed(week, year)
+        cleanup_old_articles(week, year)
 
 if __name__ == "__main__":
     run()
