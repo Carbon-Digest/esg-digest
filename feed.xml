@@ -18,8 +18,19 @@
     <itunes:explicit>false</itunes:explicit>
     <itunes:type>episodic</itunes:type>
     <itunes:image href="https://placehold.co/1400x1400/166534/ffffff/png?text=ESG+Briefing"/>
-    <lastBuildDate>Mon, 06 Apr 2026 03:42:16 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 06 Apr 2026 05:54:46 +0000</lastBuildDate>
     
+    <item>
+      <title>The Climate Digest — Week 15, 2026</title>
+      <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-15-2026/digest_w15_2026.mp3</link>
+      <description>This week’s digest covers India’s new 2035 climate commitment, SBTi’s updated FLAG guidance and automotive consultation, and key energy policy shifts in the UK. Fresh regulatory and methodological developments take center stage for practitioners navigating evolving compliance and target-setting landscapes.</description>
+      <enclosure url="https://github.com/Carbon-Digest/esg-digest/releases/download/week-15-2026/digest_w15_2026.mp3" length="0" type="audio/mpeg"/>
+      <guid isPermaLink="false">https://github.com/Carbon-Digest/esg-digest/releases/download/week-15-2026/digest_w15_2026.mp3</guid>
+      <pubDate>Mon, 06 Apr 2026 05:54:16 +0000</pubDate>
+      <itunes:duration>1200</itunes:duration>
+      <itunes:summary>This week’s digest covers India’s new 2035 climate commitment, SBTi’s updated FLAG guidance and automotive consultation, and key energy policy shifts in the UK. Fresh regulatory and methodological developments take center stage for practitioners navigating evolving compliance and target-setting landscapes.</itunes:summary>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
     <item>
       <title>The Climate Digest — Week 15, 2026</title>
       <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-15-2026/digest_w15_2026.mp3</link>
