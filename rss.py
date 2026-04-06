@@ -42,8 +42,14 @@ def fetch_episodes():
 
 def get_audio_size(url):
     try:
-        r = requests.head(url, timeout=10)
-        return r.headers.get("content-length", "0")
+        r = requests.head(url, timeout=10, allow_redirects=True)
+        size = r.headers.get("content-length", "0")
+        if size == "0":
+            # Fallback: stream first bytes to get size from redirect
+            r2 = requests.get(url, stream=True, timeout=10, allow_redirects=True)
+            size = r2.headers.get("content-length", "0")
+            r2.close()
+        return size
     except Exception:
         return "0"
 
