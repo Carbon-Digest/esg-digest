@@ -2,53 +2,47 @@ import feedparser
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime, timezone, timedelta
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import os
 import psycopg2
-from psycopg2.extras import RealDictCursor
 
 # ─── CONFIG ───────────────────────────────────────────────
 
 NEON_URL     = os.environ["NEON_POSTGRES_URL"]
 HEADERS      = {"User-Agent": "Mozilla/5.0 (compatible; ESG-Digest-Bot/1.0)"}
 
-# Use TARGET_WEEK/YEAR if set (manual run), otherwise current week
 _now         = datetime.now(timezone.utc)
 _iso         = _now.isocalendar()
 TARGET_WEEK  = int(os.environ.get("TARGET_WEEK", _iso[1]))
 TARGET_YEAR  = int(os.environ.get("TARGET_YEAR", _iso[0]))
 
-# Scrape articles from the full target week
 ONE_WEEK_AGO = datetime(TARGET_YEAR, 1, 1, tzinfo=timezone.utc) + \
                timedelta(weeks=TARGET_WEEK - 1) - timedelta(days=7)
+
+MAX_ARTICLES_PER_SOURCE = 5
 
 # ─── DB HELPER ────────────────────────────────────────────
 
 def get_conn():
     return psycopg2.connect(NEON_URL)
 
-MAX_ARTICLES_PER_SOURCE = 5
-
 def save_article(source_label, title, url, published_at, body_text):
     try:
         conn = get_conn()
-        cur = conn.cursor()
-        # Check if URL exists
+        cur  = conn.cursor()
         cur.execute("SELECT id FROM articles WHERE url = %s", (url,))
         if cur.fetchone():
             print(f"  ~ Skipping (exists): {title[:60]}")
             cur.close(); conn.close()
             return
-        # Check how many articles we already have from this source this week
         cur.execute("""
             SELECT COUNT(*) FROM articles
             WHERE source_label = %s AND week_number = %s
         """, (source_label, TARGET_WEEK))
-        count = cur.fetchone()[0]
-        if count >= MAX_ARTICLES_PER_SOURCE:
-            print(f"  ~ Skipping (limit reached for {source_label}): {title[:60]}")
+        if cur.fetchone()[0] >= MAX_ARTICLES_PER_SOURCE:
+            print(f"  ~ Limit reached for {source_label}")
             cur.close(); conn.close()
             return
-        now = datetime.now(timezone.utc)
         cur.execute("""
             INSERT INTO articles
                 (source_label, title, url, published_at, body_text,
@@ -66,228 +60,139 @@ def save_article(source_label, title, url, published_at, body_text):
     except Exception as e:
         print(f"  ✗ DB error: {e}")
     finally:
-        cur.close(); conn.close()
+        try:
+            cur.close(); conn.close()
+        except Exception:
+            pass
 
-def fetch_article_body(url):
+def scrape_text(url):
+    """Fetch plain text from a URL — used only for RSS sources with no body."""
     try:
-        r = requests.get(url, headers=HEADERS, timeout=15)
+        r    = requests.get(url, headers=HEADERS, timeout=10)
         soup = BeautifulSoup(r.text, "html.parser")
         for tag in soup(["nav", "footer", "script", "style", "header"]):
             tag.decompose()
-        return soup.get_text(separator=" ", strip=True)
+        return soup.get_text(separator=" ", strip=True)[:50000]
     except Exception:
         return ""
 
-# ─── 1. DAVID CARLIN — RSS ────────────────────────────────
+# ─── SOURCES ──────────────────────────────────────────────
+# Each fetch function collects articles and returns them as a list
+# No DB writes inside — all writes happen at the end to avoid connection overload
 
-def fetch_substack():
-    label = "David Carlin / Substack"
+def fetch_rss(label, feed_url, filter_fn=None):
+    """Generic RSS fetcher. filter_fn(entry) returns True to include."""
     print(f"\n→ {label}")
-    feed = feedparser.parse("https://davidcarlin.substack.com/feed")
-    for entry in feed.entries:
-        pub = entry.get("published_parsed")
-        pub_dt = datetime(*pub[:6], tzinfo=timezone.utc) if pub else None
-        if pub_dt and pub_dt < ONE_WEEK_AGO:
-            continue
-        body = BeautifulSoup(
-            entry.get("summary", ""), "html.parser"
-        ).get_text(separator=" ", strip=True)
-        save_article(label, entry.title, entry.link, pub_dt, body)
+    results = []
+    try:
+        feed = feedparser.parse(feed_url)
+        for entry in feed.entries:
+            pub    = entry.get("published_parsed")
+            pub_dt = datetime(*pub[:6], tzinfo=timezone.utc) if pub else None
+            if pub_dt and pub_dt < ONE_WEEK_AGO:
+                continue
+            if filter_fn and not filter_fn(entry):
+                continue
+            body = BeautifulSoup(
+                entry.get("summary", ""), "html.parser"
+            ).get_text(separator=" ", strip=True)
+            results.append((label, entry.title, entry.link, pub_dt, body))
+    except Exception as e:
+        print(f"  ✗ Error: {e}")
+    return results
 
-# ─── 2. SBTI NEWS ─────────────────────────────────────────
-
-def fetch_sbti():
-    label = "SBTi News"
+def fetch_scrape(label, url, link_selector, base_url):
+    """Generic page scraper — uses title + excerpt from listing page only, no individual fetches."""
     print(f"\n→ {label}")
-    r = requests.get("https://sciencebasedtargets.org/news", headers=HEADERS, timeout=15)
-    soup = BeautifulSoup(r.text, "html.parser")
-    seen = set()
-    for a in soup.select("a[href*='/news/']"):
-        title = a.get_text(strip=True)
-        href = a.get("href", "")
-        if not title or len(title) < 15 or href in seen:
-            continue
-        seen.add(href)
-        url = href if href.startswith("http") else "https://sciencebasedtargets.org" + href
-        body = fetch_article_body(url)
-        save_article(label, title, url, datetime.now(timezone.utc), body)
+    results = []
+    try:
+        r    = requests.get(url, headers=HEADERS, timeout=20)
+        soup = BeautifulSoup(r.text, "html.parser")
+        seen = set()
+        for a in soup.select(link_selector):
+            title = a.get_text(strip=True)
+            href  = a.get("href", "")
+            if not title or len(title) < 15 or href in seen:
+                continue
+            seen.add(href)
+            full_url = href if href.startswith("http") else base_url + href
+            # Use parent element text as body instead of fetching individual pages
+            parent_text = a.find_parent().get_text(separator=" ", strip=True) if a.find_parent() else title
+            results.append((label, title, full_url, datetime.now(timezone.utc), parent_text))
+    except Exception as e:
+        print(f"  ✗ Error: {e}")
+    return results
 
-# ─── 3. WRI NEWS ──────────────────────────────────────────
+# ─── SOURCE DEFINITIONS ───────────────────────────────────
 
-def fetch_wri():
-    label = "WRI News"
-    print(f"\n→ {label}")
-    r = requests.get("https://www.wri.org/news", headers=HEADERS, timeout=15)
-    soup = BeautifulSoup(r.text, "html.parser")
-    seen = set()
-    for a in soup.select("a[href*='/news/']"):
-        title = a.get_text(strip=True)
-        href = a.get("href", "")
-        if not title or len(title) < 15 or href in seen:
-            continue
-        seen.add(href)
-        url = href if href.startswith("http") else "https://www.wri.org" + href
-        body = fetch_article_body(url)
-        save_article(label, title, url, datetime.now(timezone.utc), body)
+def run_all_sources():
+    tasks = [
+        lambda: fetch_rss("David Carlin / Substack", "https://davidcarlin.substack.com/feed"),
+        lambda: fetch_rss("Carbon Brief / DeBriefed", "https://www.carbonbrief.org/feed/",
+                          filter_fn=lambda e: "debriefed" in e.get("link", "").lower() or
+                          any("debriefed" in t.get("term", "").lower() for t in e.get("tags", []))),
+        lambda: fetch_rss("Carbon Pulse", "https://carbon-pulse.com/feed"),
+        lambda: fetch_scrape("SBTi News", "https://sciencebasedtargets.org/news",
+                             "a[href*='/news/']", "https://sciencebasedtargets.org"),
+        lambda: fetch_scrape("WRI News", "https://www.wri.org/news",
+                             "a[href*='/news/']", "https://www.wri.org"),
+        lambda: fetch_scrape("GHG Protocol", "https://ghgprotocol.org/blog",
+                             "a[href*='/blog/']", "https://ghgprotocol.org"),
+        lambda: fetch_scrape("Carbon Tracker", "https://carbontracker.org/reports/",
+                             "a[href*='/reports/']", "https://carbontracker.org"),
+        lambda: fetch_scrape("PCAF", "https://carbonaccountingfinancials.com/news",
+                             "a[href*='/news']", "https://carbonaccountingfinancials.com"),
+        lambda: fetch_climate_adapt(),
+    ]
 
-# ─── 4. GHG PROTOCOL ─────────────────────────────────────
-
-def fetch_ghgprotocol():
-    label = "GHG Protocol"
-    print(f"\n→ {label}")
-    r = requests.get("https://ghgprotocol.org/blog", headers=HEADERS, timeout=15)
-    soup = BeautifulSoup(r.text, "html.parser")
-    seen = set()
-    for a in soup.select("a[href*='/blog/']"):
-        title = a.get_text(strip=True)
-        href = a.get("href", "")
-        if not title or len(title) < 15 or href in seen:
-            continue
-        seen.add(href)
-        url = href if href.startswith("http") else "https://ghgprotocol.org" + href
-        body = fetch_article_body(url)
-        save_article(label, title, url, datetime.now(timezone.utc), body)
-
-# ─── 5. CLIMATE-ADAPT EEA ────────────────────────────────
+    all_results = []
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        futures = {executor.submit(t): t for t in tasks}
+        for future in as_completed(futures):
+            try:
+                all_results.extend(future.result())
+            except Exception as e:
+                print(f"  ✗ Task error: {e}")
+    return all_results
 
 def fetch_climate_adapt():
+    """EEA needs longer timeout — handled separately."""
     label = "Climate-ADAPT (EEA)"
     base  = "https://climate-adapt.eea.europa.eu"
     print(f"\n→ {label}")
+    results = []
     try:
-        r = requests.get(f"{base}/en/news-archive", headers=HEADERS, timeout=45)
+        r    = requests.get(f"{base}/en/news-archive", headers=HEADERS, timeout=45)
+        soup = BeautifulSoup(r.text, "html.parser")
+        seen = set()
+        for a in soup.select("a[href*='/news-archive/']"):
+            title = a.get_text(strip=True)
+            href  = a.get("href", "")
+            if not title or len(title) < 15 or href in seen:
+                continue
+            seen.add(href)
+            url         = href if href.startswith("http") else base + href
+            parent_text = a.find_parent().get_text(separator=" ", strip=True) if a.find_parent() else title
+            results.append((label, title, url, datetime.now(timezone.utc), parent_text))
     except requests.exceptions.Timeout:
         print("  ⚠ Climate-ADAPT timed out — skipping.")
-        return
-    soup = BeautifulSoup(r.text, "html.parser")
-    seen = set()
-    for a in soup.select("a[href*='/news-archive/']"):
-        title = a.get_text(strip=True)
-        href  = a.get("href", "")
-        if not title or len(title) < 15 or href in seen:
-            continue
-        seen.add(href)
-        url = href if href.startswith("http") else base + href
-        try:
-            body = fetch_article_body(url)
-        except Exception:
-            body = title
-        save_article(label, title, url, datetime.now(timezone.utc), body)
-
-# ─── 6. CARBON BRIEF DEBRIEFED ───────────────────────────
-
-def fetch_carbonbrief():
-    label = "Carbon Brief / DeBriefed"
-    print(f"\n→ {label}")
-    feed = feedparser.parse("https://www.carbonbrief.org/feed/")
-    for entry in feed.entries:
-        tags = [t.get("term", "").lower() for t in entry.get("tags", [])]
-        if "debriefed" not in tags and "debriefed" not in entry.get("link", "").lower():
-            continue
-        pub = entry.get("published_parsed")
-        pub_dt = datetime(*pub[:6], tzinfo=timezone.utc) if pub else None
-        if pub_dt and pub_dt < ONE_WEEK_AGO:
-            continue
-        body = BeautifulSoup(
-            entry.get("summary", ""), "html.parser"
-        ).get_text(separator=" ", strip=True)
-        save_article(label, entry.title, entry.link, pub_dt, body)
-
-# ─── 7. KOLUM CBAM ───────────────────────────────────────
-
-def fetch_kolum():
-    label = "Kolum CBAM Weekly"
-    print(f"\n→ {label}")
-    try:
-        from playwright.sync_api import sync_playwright
-        with sync_playwright() as p:
-            browser = p.chromium.launch()
-            page    = browser.new_page()
-            page.goto("https://www.kolum.earth/en/cbam/weekly", timeout=30000)
-            page.wait_for_timeout(3000)  # wait for JS to render
-            body = page.inner_text("body")
-            browser.close()
-        if len(body) > 300:
-            save_article(label, f"CBAM Weekly — {datetime.now().strftime('%Y-W%V')}",
-                         "https://www.kolum.earth/en/cbam/weekly",
-                         datetime.now(timezone.utc), body)
-        else:
-            print("  ⚠ Kolum content still too short after JS render.")
-    except Exception as e:
-        print(f"  ✗ Kolum error: {e}")
-
-# ─── 8. CARBON PULSE ─────────────────────────────────────
-
-def fetch_carbon_pulse():
-    label = "Carbon Pulse"
-    print(f"\n→ {label}")
-    feed = feedparser.parse("https://carbon-pulse.com/feed")
-    for entry in feed.entries:
-        pub = entry.get("published_parsed")
-        pub_dt = datetime(*pub[:6], tzinfo=timezone.utc) if pub else None
-        if pub_dt and pub_dt < ONE_WEEK_AGO:
-            continue
-        body = BeautifulSoup(
-            entry.get("summary", ""), "html.parser"
-        ).get_text(separator=" ", strip=True)
-        save_article(label, entry.title, entry.link, pub_dt, body)
-
-# ─── 9. CARBON TRACKER ───────────────────────────────────
-
-def fetch_carbon_tracker():
-    label = "Carbon Tracker"
-    print(f"\n→ {label}")
-    try:
-        r    = requests.get("https://carbontracker.org/reports/", headers=HEADERS, timeout=15)
-        soup = BeautifulSoup(r.text, "html.parser")
-        seen = set()
-        for a in soup.select("a[href*='/reports/']"):
-            title = a.get_text(strip=True)
-            href  = a.get("href", "")
-            if not title or len(title) < 15 or href in seen:
-                continue
-            seen.add(href)
-            url  = href if href.startswith("http") else "https://carbontracker.org" + href
-            body = fetch_article_body(url)
-            save_article(label, title, url, datetime.now(timezone.utc), body)
     except Exception as e:
         print(f"  ✗ Error: {e}")
+    return results
 
-# ─── 10. PCAF ────────────────────────────────────────────
-
-def fetch_pcaf():
-    label = "PCAF"
-    print(f"\n→ {label}")
-    try:
-        r    = requests.get("https://carbonaccountingfinancials.com/news", headers=HEADERS, timeout=15)
-        soup = BeautifulSoup(r.text, "html.parser")
-        seen = set()
-        for a in soup.select("a[href*='/news']"):
-            title = a.get_text(strip=True)
-            href  = a.get("href", "")
-            if not title or len(title) < 15 or href in seen:
-                continue
-            seen.add(href)
-            url  = href if href.startswith("http") else "https://carbonaccountingfinancials.com" + href
-            body = fetch_article_body(url)
-            save_article(label, title, url, datetime.now(timezone.utc), body)
-    except Exception as e:
-        print(f"  ✗ Error: {e}")
+# ─── MAIN ─────────────────────────────────────────────────
 
 def run():
     print("=" * 60)
     print(f"ESG Digest Scraper — {datetime.now().strftime('%Y-%m-%d %H:%M UTC')}")
     print("=" * 60)
-    fetch_substack()
-    fetch_sbti()
-    fetch_wri()
-    fetch_ghgprotocol()
-    fetch_climate_adapt()
-    fetch_carbonbrief()
-    fetch_kolum()
-    fetch_carbon_pulse()
-    fetch_carbon_tracker()
-    fetch_pcaf()
+
+    all_articles = run_all_sources()
+    print(f"\nSaving {len(all_articles)} candidate articles...")
+
+    for args in all_articles:
+        save_article(*args)
+
     print("\n✅ Done.")
 
 if __name__ == "__main__":
