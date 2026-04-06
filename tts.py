@@ -1,22 +1,31 @@
 import os
 import re
+import time
 import asyncio
 import requests
 import psycopg2
+import psycopg2.extras
 from datetime import datetime, timezone
 import edge_tts
 
 # ─── CONFIG ───────────────────────────────────────────────
 
 NEON_URL      = os.environ["NEON_POSTGRES_URL"]
-GITHUB_TOKEN  = os.environ["GITHUB_TOKEN"]   # built-in, no setup needed
-GITHUB_REPO   = os.environ["GITHUB_REPOSITORY"]  # built-in, e.g. "youruser/esg-digest"
+GITHUB_TOKEN  = os.environ["GITHUB_TOKEN"]
+GITHUB_REPO   = os.environ["GITHUB_REPOSITORY"]
 VOICE         = "en-GB-RyanNeural"
+
+_now        = datetime.now(timezone.utc)
+_iso        = _now.isocalendar()
+TARGET_WEEK = int(os.environ.get("TARGET_WEEK", _iso[1]))
+TARGET_YEAR = int(os.environ.get("TARGET_YEAR", _iso[0]))
+
+# ─── DB ───────────────────────────────────────────────────
 
 def get_conn():
     return psycopg2.connect(NEON_URL)
 
-# ─── STEP 1: FETCH LATEST UNPROCESSED DIGEST ──────────────
+# ─── STEP 1: FETCH DIGEST ─────────────────────────────────
 
 def fetch_latest_digest():
     print(f"Fetching digest for week {TARGET_WEEK}/{TARGET_YEAR}...")
@@ -32,7 +41,7 @@ def fetch_latest_digest():
     digest = cur.fetchone()
     cur.close(); conn.close()
     if not digest:
-        print("No unprocessed digest found.")
+        print("No digest found for this week.")
         return None
     print(f"Found: {digest['title']}")
     return dict(digest)
@@ -60,7 +69,7 @@ def generate_audio(digest):
     print(f"  ✓ Audio saved: {filename} ({size_kb} KB)")
     return filename
 
-# ─── STEP 4: CREATE GITHUB RELEASE + UPLOAD MP3 ───────────
+# ─── STEP 4: UPLOAD TO GITHUB RELEASE ─────────────────────
 
 def upload_to_github_release(filename, digest):
     tag     = f"week-{digest['week_number']}-{digest['year']}"
@@ -71,7 +80,7 @@ def upload_to_github_release(filename, digest):
         "X-GitHub-Api-Version": "2022-11-28"
     }
 
-    # Delete existing release for this week if it exists
+    # Delete existing release and tag if they exist
     r = requests.get(
         f"https://api.github.com/repos/{GITHUB_REPO}/releases/tags/{tag}",
         headers=headers
@@ -83,10 +92,12 @@ def upload_to_github_release(filename, digest):
             f"https://api.github.com/repos/{GITHUB_REPO}/releases/{release_id}",
             headers=headers
         )
-        requests.delete(
-            f"https://api.github.com/repos/{GITHUB_REPO}/git/refs/tags/{tag}",
-            headers=headers
-        )
+    # Always try to delete the tag
+    requests.delete(
+        f"https://api.github.com/repos/{GITHUB_REPO}/git/refs/tags/{tag}",
+        headers=headers
+    )
+    time.sleep(3)  # wait for GitHub to process deletion
 
     # Create fresh release
     print(f"Creating GitHub Release: {tag}...")
@@ -96,18 +107,18 @@ def upload_to_github_release(filename, digest):
         json={
             "tag_name": tag,
             "name": title,
-            "body": digest.get("title", ""),
+            "body": title,
             "draft": False,
             "prerelease": False
         }
     )
     r.raise_for_status()
-    release     = r.json()
-    upload_url  = release["upload_url"].replace("{?name,label}", "")
-    release_url = release["html_url"]
+    release    = r.json()
+    upload_url = release["upload_url"].replace("{?name,label}", "")
+    rel_url    = release["html_url"]
 
     # Upload MP3
-    print(f"Uploading MP3 to release...")
+    print(f"Uploading MP3...")
     with open(filename, "rb") as f:
         mp3_data = f.read()
 
@@ -118,11 +129,9 @@ def upload_to_github_release(filename, digest):
         data=mp3_data
     )
     r.raise_for_status()
-    asset     = r.json()
-    audio_url = asset["browser_download_url"]
-
+    audio_url = r.json()["browser_download_url"]
     print(f"  ✓ MP3 uploaded: {audio_url}")
-    return audio_url, release_url
+    return audio_url, rel_url
 
 # ─── STEP 5: SAVE AUDIO URL TO NEON ──────────────────────
 
@@ -146,8 +155,8 @@ def run():
     digest = fetch_latest_digest()
     if not digest:
         return
-    filename            = generate_audio(digest)
-    audio_url, rel_url  = upload_to_github_release(filename, digest)
+    filename           = generate_audio(digest)
+    audio_url, rel_url = upload_to_github_release(filename, digest)
     save_audio_url(digest["id"], audio_url)
     print(f"\n✅ Done! Release: {rel_url}")
     print(f"   Audio:   {audio_url}")
