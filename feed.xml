@@ -10,7 +10,7 @@
     <itunes:author>ESG Digest</itunes:author>
     <itunes:owner>
       <itunes:name>ESG Digest</itunes:name>
-      <itunes:email>your@email.com</itunes:email>
+      <itunes:email></itunes:email>
     </itunes:owner>
     <itunes:category text="Business">
       <itunes:category text="Non-Profit"/>
@@ -18,50 +18,17 @@
     <itunes:explicit>false</itunes:explicit>
     <itunes:type>episodic</itunes:type>
     <itunes:image href="https://placehold.co/1400x1400/166534/ffffff/png?text=ESG+Briefing"/>
-    <lastBuildDate>Mon, 06 Apr 2026 13:29:25 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 06 Apr 2026 13:43:25 +0000</lastBuildDate>
     
     <item>
       <title>The Climate Digest — Week 13, 2026</title>
       <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-13-2026/digest_w13_2026.mp3</link>
-      <description>This week’s digest covers critical shifts in climate policy and finance: SBTi’s governance overhaul and target milestone, EU adaptation needs revealed, carbon market fragmentation and CDR funding gaps, and new geopolitical pressures on climate action. All developments are from the past seven days.</description>
-      <enclosure url="https://github.com/Carbon-Digest/esg-digest/releases/download/week-13-2026/digest_w13_2026.mp3" length="3174336" type="audio/mpeg"/>
+      <description>This week’s digest covers India’s new 2035 climate pledge, SBTi’s updated FLAG guidance and automotive net-zero consultation, funding shifts in carbon removal, and new adaptation tools from Europe. Regulatory and market developments in carbon pricing, geothermal energy, and ocean innovation round out the briefing.</description>
+      <enclosure url="https://github.com/Carbon-Digest/esg-digest/releases/download/week-13-2026/digest_w13_2026.mp3" length="3206448" type="audio/mpeg"/>
       <guid isPermaLink="false">https://github.com/Carbon-Digest/esg-digest/releases/download/week-13-2026/digest_w13_2026.mp3</guid>
-      <pubDate>Mon, 06 Apr 2026 13:28:35 +0000</pubDate>
+      <pubDate>Mon, 06 Apr 2026 13:42:28 +0000</pubDate>
       <itunes:duration>1200</itunes:duration>
-      <itunes:summary>This week’s digest covers critical shifts in climate policy and finance: SBTi’s governance overhaul and target milestone, EU adaptation needs revealed, carbon market fragmentation and CDR funding gaps, and new geopolitical pressures on climate action. All developments are from the past seven days.</itunes:summary>
-      <itunes:explicit>false</itunes:explicit>
-    </item>
-    <item>
-      <title>The Climate Digest — Week 15, 2026</title>
-      <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-15-2026/digest_w15_2026.mp3</link>
-      <description>This week’s digest covers India’s new 2035 climate commitment, SBTi’s updated FLAG guidance and automotive consultation, and key energy policy shifts in the UK. Fresh regulatory and methodological developments take center stage for practitioners navigating evolving compliance and target-setting landscapes.</description>
-      <enclosure url="https://github.com/Carbon-Digest/esg-digest/releases/download/week-15-2026/digest_w15_2026.mp3" length="1470528" type="audio/mpeg"/>
-      <guid isPermaLink="false">https://github.com/Carbon-Digest/esg-digest/releases/download/week-15-2026/digest_w15_2026.mp3</guid>
-      <pubDate>Mon, 06 Apr 2026 05:54:16 +0000</pubDate>
-      <itunes:duration>1200</itunes:duration>
-      <itunes:summary>This week’s digest covers India’s new 2035 climate commitment, SBTi’s updated FLAG guidance and automotive consultation, and key energy policy shifts in the UK. Fresh regulatory and methodological developments take center stage for practitioners navigating evolving compliance and target-setting landscapes.</itunes:summary>
-      <itunes:explicit>false</itunes:explicit>
-    </item>
-    <item>
-      <title>The Climate Digest — Week 15, 2026</title>
-      <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-15-2026/digest_w15_2026.mp3</link>
-      <description>This week’s digest covers the SBTi’s draft Power Sector Net-Zero Standard pilot, new chemicals sector pathways, U.S. EPA’s regulatory reversal, and Africa’s carbon market expansion potential. We also highlight EU adaptation tools, biochar plant tenders, and super pollutant project scaling.</description>
-      <enclosure url="https://github.com/Carbon-Digest/esg-digest/releases/download/week-15-2026/digest_w15_2026.mp3" length="1470528" type="audio/mpeg"/>
-      <guid isPermaLink="false">https://github.com/Carbon-Digest/esg-digest/releases/download/week-15-2026/digest_w15_2026.mp3</guid>
-      <pubDate>Mon, 06 Apr 2026 03:41:34 +0000</pubDate>
-      <itunes:duration>1200</itunes:duration>
-      <itunes:summary>This week’s digest covers the SBTi’s draft Power Sector Net-Zero Standard pilot, new chemicals sector pathways, U.S. EPA’s regulatory reversal, and Africa’s carbon market expansion potential. We also highlight EU adaptation tools, biochar plant tenders, and super pollutant project scaling.</itunes:summary>
-      <itunes:explicit>false</itunes:explicit>
-    </item>
-    <item>
-      <title>The Climate Digest — Week 14, 2026</title>
-      <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-14-2026/digest_w14_2026.mp3</link>
-      <description>This week’s digest covers India’s revised 2035 climate commitment, SBTi’s updated FLAG guidance and new governance steps, emerging risks in voluntary carbon markets, and fresh data on urban heat risks and European adaptation needs. Key regulatory and market signals from the WCI, Washington state, and EU early warning systems are also highlighted.</description>
-      <enclosure url="https://github.com/Carbon-Digest/esg-digest/releases/download/week-14-2026/digest_w14_2026.mp3" length="3777264" type="audio/mpeg"/>
-      <guid isPermaLink="false">https://github.com/Carbon-Digest/esg-digest/releases/download/week-14-2026/digest_w14_2026.mp3</guid>
-      <pubDate>Mon, 06 Apr 2026 03:38:47 +0000</pubDate>
-      <itunes:duration>1200</itunes:duration>
-      <itunes:summary>This week’s digest covers India’s revised 2035 climate commitment, SBTi’s updated FLAG guidance and new governance steps, emerging risks in voluntary carbon markets, and fresh data on urban heat risks and European adaptation needs. Key regulatory and market signals from the WCI, Washington state, and EU early warning systems are also highlighted.</itunes:summary>
+      <itunes:summary>This week’s digest covers India’s new 2035 climate pledge, SBTi’s updated FLAG guidance and automotive net-zero consultation, funding shifts in carbon removal, and new adaptation tools from Europe. Regulatory and market developments in carbon pricing, geothermal energy, and ocean innovation round out the briefing.</itunes:summary>
       <itunes:explicit>false</itunes:explicit>
     </item>
   </channel>
