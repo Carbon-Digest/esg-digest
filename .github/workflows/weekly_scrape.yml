@@ -2,7 +2,7 @@ name: Weekly ESG Digest
 
 on:
   schedule:
-    - cron: '0 6 * * 1'   # Every Monday at 6:00 AM UTC
+    - cron: '0 4 * * 1'   # Every Monday at 4:00 AM UTC
   workflow_dispatch:
 
 jobs:
