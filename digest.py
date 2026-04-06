@@ -25,8 +25,6 @@ def get_conn():
 
 def fetch_weeks_articles():
     print(f"Fetching articles for week {TARGET_WEEK}/{TARGET_YEAR}...")
-    # Override title with correct week regardless of what Mistral wrote
-    digest["title"] = f"The ESG and Climate Briefing — Week {week}, {year}"
 
     conn = get_conn()
     cur  = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
@@ -161,7 +159,7 @@ def save_digest(raw_response, week, year):
         return None
 
     # Override title with correct week regardless of what Mistral wrote
-    digest["title"] = f"The ESG and Climate Briefing — Week {week}, {year}"
+    digest["title"] = f"Climate Digest — Week {week}, {year}"
 
     conn = get_conn()
     cur  = conn.cursor()
