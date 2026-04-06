@@ -18,8 +18,19 @@
     <itunes:explicit>false</itunes:explicit>
     <itunes:type>episodic</itunes:type>
     <itunes:image href="https://placehold.co/1400x1400/166534/ffffff/png?text=ESG+Briefing"/>
-    <lastBuildDate>Mon, 06 Apr 2026 14:25:34 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 06 Apr 2026 14:29:03 +0000</lastBuildDate>
     
+    <item>
+      <title>The Climate Digest — Week 15, 2026</title>
+      <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-15-2026/digest_w15_2026.mp3</link>
+      <description>This week’s Digest covers India’s revised 2035 climate targets, SBTi’s governance and FLAG guidance updates, new EU climate adaptation insights, and market shifts in carbon removal funding and blue carbon integrity. We also highlight US legislative moves on geothermal and ocean innovation.</description>
+      <enclosure url="https://github.com/Carbon-Digest/esg-digest/releases/download/week-15-2026/digest_w15_2026.mp3" length="4158000" type="audio/mpeg"/>
+      <guid isPermaLink="false">https://github.com/Carbon-Digest/esg-digest/releases/download/week-15-2026/digest_w15_2026.mp3</guid>
+      <pubDate>Mon, 06 Apr 2026 14:28:07 +0000</pubDate>
+      <itunes:duration>1200</itunes:duration>
+      <itunes:summary>This week’s Digest covers India’s revised 2035 climate targets, SBTi’s governance and FLAG guidance updates, new EU climate adaptation insights, and market shifts in carbon removal funding and blue carbon integrity. We also highlight US legislative moves on geothermal and ocean innovation.</itunes:summary>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
     <item>
       <title>The Climate Digest — Week 14, 2026</title>
       <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-14-2026/digest_w14_2026.mp3</link>
