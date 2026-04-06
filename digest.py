@@ -64,10 +64,10 @@ def web_search(query):
 def enrich_with_search():
     print("Enriching with web search...")
     queries = [
-        "ESG reporting standards 2026 latest",
-        "carbon markets CBAM update 2026",
-        "climate finance developments 2026",
-        "sustainability disclosure regulations 2026",
+        "ESG reporting standards latest",
+        "carbon markets CBAM update",
+        "climate finance developments",
+        "carbon accounting and net zero",
     ]
     enrichments = {}
     for q in queries:
