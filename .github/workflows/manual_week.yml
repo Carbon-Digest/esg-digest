@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       week_number:
-        description: 'Week number'
+        description: 'ISO week number (e.g. 14)'
         required: true
         type: number
       year:
@@ -16,6 +16,8 @@ on:
 jobs:
   run:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     permissions:
       contents: write
 
@@ -30,6 +32,9 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r requirements.txt
+
+      - name: Install Playwright browser
+        run: python -m playwright install chromium --with-deps
 
       - name: Run scraper
         env:
@@ -51,7 +56,6 @@ jobs:
           NEON_POSTGRES_URL: ${{ secrets.NEON_POSTGRES_URL }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-          PODCAST_EMAIL: ${{ secrets.PODCAST_EMAIL }}
           TARGET_WEEK: ${{ inputs.week_number }}
           TARGET_YEAR: ${{ inputs.year }}
         run: python tts.py
@@ -61,4 +65,5 @@ jobs:
           NEON_POSTGRES_URL: ${{ secrets.NEON_POSTGRES_URL }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
+          PODCAST_EMAIL: ${{ secrets.PODCAST_EMAIL }}
         run: python rss.py
