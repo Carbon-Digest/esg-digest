@@ -4,14 +4,22 @@ from bs4 import BeautifulSoup
 from datetime import datetime, timezone, timedelta
 import os
 import psycopg2
-import psycopg2.extras
 from psycopg2.extras import RealDictCursor
 
 # ─── CONFIG ───────────────────────────────────────────────
 
 NEON_URL     = os.environ["NEON_POSTGRES_URL"]
-ONE_WEEK_AGO = datetime.now(timezone.utc) - timedelta(days=7)
 HEADERS      = {"User-Agent": "Mozilla/5.0 (compatible; ESG-Digest-Bot/1.0)"}
+
+# Use TARGET_WEEK/YEAR if set (manual run), otherwise current week
+_now         = datetime.now(timezone.utc)
+_iso         = _now.isocalendar()
+TARGET_WEEK  = int(os.environ.get("TARGET_WEEK", _iso[1]))
+TARGET_YEAR  = int(os.environ.get("TARGET_YEAR", _iso[0]))
+
+# Scrape articles from the full target week
+ONE_WEEK_AGO = datetime(TARGET_YEAR, 1, 1, tzinfo=timezone.utc) + \
+               timedelta(weeks=TARGET_WEEK - 1) - timedelta(days=7)
 
 # ─── DB HELPER ────────────────────────────────────────────
 
@@ -37,8 +45,8 @@ def save_article(source_label, title, url, published_at, body_text):
             source_label, title, url,
             published_at.isoformat() if published_at else None,
             body_text[:50000], False,
-            now.isocalendar()[1], now.year,
-            now.isoformat()
+            TARGET_WEEK, TARGET_YEAR,
+            datetime.now(timezone.utc).isoformat()
         ))
         conn.commit()
         print(f"  ✓ Saved: {title[:70]}")
