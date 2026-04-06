@@ -1,47 +1,41 @@
 import os
 import json
-import psycopg2  # Use psycopg2 for PostgreSQL
 import requests
+import psycopg2
 from datetime import datetime, timezone
-import time
 
 # ─── CONFIG ───────────────────────────────────────────────
-NEON_URL = os.environ["NEON_POSTGRES_URL"]  # e.g., "postgres://user:pass@ep-cool-123456.us-east-2.aws.neon.tech/dbname"
+
+NEON_URL    = os.environ["NEON_POSTGRES_URL"]
 MISTRAL_KEY = os.environ["MISTRAL_API_KEY"]
+
 MISTRAL_MODEL = "mistral-small-latest"
-MISTRAL_URL = "https://api.mistral.ai/v1/chat/completions"
+MISTRAL_URL   = "https://api.mistral.ai/v1/chat/completions"
+
+def get_conn():
+    return psycopg2.connect(NEON_URL)
 
 # ─── STEP 1: FETCH THIS WEEK'S ARTICLES ───────────────────
+
 def fetch_weeks_articles():
-    now = datetime.now(timezone.utc)
-    iso = now.isocalendar()
+    now  = datetime.now(timezone.utc)
+    iso  = now.isocalendar()
     week, year = iso[1], iso[0]
-
     print(f"Fetching articles for week {week}/{year}...")
+    conn = get_conn()
+    cur  = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute("""
+        SELECT source_label, title, url, body_text, published_at
+        FROM articles
+        WHERE week_number = %s AND year = %s AND processed = FALSE
+    """, (week, year))
+    articles = cur.fetchall()
+    cur.close(); conn.close()
+    print(f"Found {len(articles)} articles.")
+    return list(articles), week, year
 
-    try:
-        conn = psycopg2.connect(NEON_URL)
-        cursor = conn.cursor()
+# ─── STEP 2: WEB SEARCH ENRICHMENT ───────────────────────
 
-        cursor.execute("""
-            SELECT source_label, title, url, body_text, published_at, week_number, year
-            FROM articles
-            WHERE week_number = %s AND year = %s AND processed = FALSE
-        """, (week, year))
-
-        articles = cursor.fetchall()
-        articles = [dict(zip(['source_label', 'title', 'url', 'body_text', 'published_at', 'week_number', 'year'], row)) for row in articles]
-        print(f"Found {len(articles)} articles.")
-        return articles, week, year
-
-    except Exception as e:
-        print(f"❌ Neon Error: {e}")
-        raise
-    finally:
-        if 'conn' in locals():
-            conn.close()
-
-# ─── STEP 2: WEB SEARCH FOR ENRICHMENT ───────────────────
 def web_search(query):
     try:
         r = requests.get(
@@ -56,27 +50,28 @@ def web_search(query):
         for topic in data.get("RelatedTopics", [])[:3]:
             if isinstance(topic, dict) and topic.get("Text"):
                 results.append(topic["Text"])
-        return " | ".join(results) if results else ""
+        return " | ".join(results)
     except Exception as e:
         print(f"  Search error: {e}")
         return ""
 
-def enrich_with_search(themes):
-    print("Enriching themes with web search...")
-    enrichments = {}
-    search_queries = [
-        "ESG reporting standards 2026 latest news",
+def enrich_with_search():
+    print("Enriching with web search...")
+    queries = [
+        "ESG reporting standards 2026 latest",
         "carbon markets CBAM update 2026",
-        "climate finance developments March 2026",
+        "climate finance developments 2026",
         "sustainability disclosure regulations 2026",
     ]
-    for q in search_queries:
+    enrichments = {}
+    for q in queries:
         result = web_search(q)
         if result:
             enrichments[q] = result
     return enrichments
 
 # ─── STEP 3: BUILD PROMPT ─────────────────────────────────
+
 def build_prompt(articles, enrichments):
     articles_text = ""
     for i, a in enumerate(articles, 1):
@@ -85,42 +80,37 @@ def build_prompt(articles, enrichments):
 Article {i}
 Source: {a['source_label']}
 Title: {a['title']}
-Content: {a['body_text'][:3000]}
+Content: {str(a['body_text'])[:3000]}
 """
+    enrichment_text = "\n".join(
+        f"Search: {q}\nResult: {r}" for q, r in enrichments.items() if r
+    )
 
-    enrichment_text = ""
-    for query, result in enrichments.items():
-        if result:
-            enrichment_text += f"\nSearch: {query}\nResult: {result}\n"
+    return f"""You are an AI system that produces a weekly podcast called "The ESG and Climate Briefing" — an automated, AI-generated digest for sustainability, climate finance, and non-financial reporting practitioners.
 
-    prompt = f"""You are an AI system that produces a weekly podcast called "The ESG & Climate Briefing" — an automated, AI-generated digest for sustainability, climate finance, and non-financial reporting practitioners.
-
-Your tone is: factual, clear, and informative. You are not a human host — you are an AI summarising and synthesising information from trusted sources. You do not express opinions, use casual language, or pretend to have personal perspectives. You present information accurately and attribute it clearly to its sources.
+Your tone is: factual, clear, and informative. You are not a human host — you are an AI summarising and synthesising information from trusted sources. You do not express opinions, use casual language, or pretend to have personal perspectives.
 
 TASK:
 1. Read all the articles below from this week's sources
 2. Identify key themes, grouping related stories together
-3. Eliminate repetition — if multiple sources cover the same story, synthesize them into one richer account noting differences in framing
+3. Eliminate repetition — synthesize overlapping stories into one richer account
 4. Weave in the web search enrichment results naturally where relevant
-5. Write a complete, natural podcast script of approximately 3,500–4,500 words (shorter if it's a quiet week)
+5. Write a complete podcast script of approximately 3,500–4,500 words (shorter if quiet week)
 
 SCRIPT STRUCTURE:
-- [INTRO] Always open with exactly this format, filling in the blanks:
-  "This is the ESG and Climate Briefing — an AI-generated digest of last week's most important developments in sustainability, climate finance, carbon accounting, and non-financial reporting. This is week [X] of [YEAR]. This week's digest covers [topic 1], [topic 2], and [topic 3]."
-- [SECTIONS] One section per major theme, with clear factual transitions between them
-- [SOURCE MENTIONS] Always attribute information to its source clearly and directly. For example: "The Science Based Targets initiative published...", "Carbon Brief reported...", "The GHG Protocol announced...", "The World Resources Institute noted...", "The European Environment Agency's Climate-ADAPT platform recorded...". Vary the phrasing but keep it factual and direct.
-- [OUTRO] Close with: "That concludes this week's ESG and Climate Briefing. This digest was compiled by an AI system from the following sources: [list the sources used this week]. Source links are available in the show notes. This briefing is generated automatically each week."
+- [INTRO] Always open with: "This is the ESG and Climate Briefing — an AI-generated digest of last week's most important developments in sustainability, climate finance, carbon accounting, and non-financial reporting. This is week [X] of [YEAR]. This week's digest covers [topic 1], [topic 2], and [topic 3]."
+- [SECTIONS] One section per major theme, with clear factual transitions
+- [SOURCE MENTIONS] Always attribute clearly: "The Science Based Targets initiative published...", "Carbon Brief reported...", "The GHG Protocol announced...", etc.
+- [OUTRO] Close with: "That concludes this week's ESG and Climate Briefing. This digest was compiled by an AI system from the following sources: [list sources used]. Source links are available in the show notes. This briefing is generated automatically each week."
 
 FORMATTING RULES:
 - Write exactly as it will be spoken — no bullet points, no headers
-- Tone is factual, clear and informative — avoid overly casual language, rhetorical questions, or personal opinions
-- Do not use phrases like "I think", "in my view", or anything implying human perspective
+- Factual, clear, informative tone — no casual language or personal opinions
 - Mark meaningful pauses with [PAUSE]
-- If a week is quiet on a topic, state it plainly and move on
 
 OUTPUT: Return ONLY a JSON object with no markdown fences:
 {{
-  "title": "The ESG & Climate Briefing — Week [X], [YEAR]",
+  "title": "The ESG and Climate Briefing — Week [X], [YEAR]",
   "summary": "2-3 sentence plain text summary for show notes",
   "themes": ["theme 1", "theme 2", "theme 3"],
   "script": "the full podcast script as a single string with paragraph breaks as \\n\\n"
@@ -132,113 +122,89 @@ THIS WEEK'S ARTICLES:
 LATEST WEB SEARCH ENRICHMENT:
 {enrichment_text if enrichment_text else "No additional search results available."}
 """
-    return prompt
 
 # ─── STEP 4: CALL MISTRAL ─────────────────────────────────
+
 def generate_digest(prompt):
     print(f"Sending to Mistral ({MISTRAL_MODEL})...")
-
     headers = {
         "Authorization": f"Bearer {MISTRAL_KEY}",
         "Content-Type": "application/json"
     }
-
     payload = {
         "model": MISTRAL_MODEL,
         "messages": [{"role": "user", "content": prompt}],
         "max_tokens": 8000,
         "temperature": 0.4
     }
-
-    try:
-        r = requests.post(MISTRAL_URL, headers=headers, json=payload, timeout=120)
-        r.raise_for_status()
-        return r.json()["choices"][0]["message"]["content"].strip()
-    except Exception as e:
-        print(f"❌ Mistral API Error: {e}")
-        raise
+    r = requests.post(MISTRAL_URL, headers=headers, json=payload, timeout=120)
+    r.raise_for_status()
+    return r.json()["choices"][0]["message"]["content"].strip()
 
 # ─── STEP 5: PARSE AND SAVE ───────────────────────────────
+
 def save_digest(raw_response, week, year):
     clean = raw_response.replace("```json", "").replace("```", "").strip()
-
     try:
         digest = json.loads(clean)
     except json.JSONDecodeError as e:
         print(f"JSON parse error: {e}")
         with open("digest_raw.txt", "w") as f:
             f.write(raw_response)
-        print("Raw response saved to digest_raw.txt for inspection")
+        print("Raw response saved to digest_raw.txt")
         return None
 
-    try:
-        conn = psycopg2.connect(NEON_URL)
-        cursor = conn.cursor()
+    conn = get_conn()
+    cur  = conn.cursor()
+    cur.execute("""
+        INSERT INTO digests
+            (week_number, year, title, summary, themes, script, audio_url, created_at)
+        VALUES (%s, %s, %s, %s, %s, %s, NULL, %s)
+    """, (
+        week, year,
+        digest.get("title"),
+        digest.get("summary"),
+        json.dumps(digest.get("themes", [])),
+        digest.get("script"),
+        datetime.now(timezone.utc).isoformat()
+    ))
+    conn.commit()
+    cur.close(); conn.close()
 
-        cursor.execute("""
-            INSERT INTO digests (week_number, year, title, summary, themes, script, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
-        """, (
-            week,
-            year,
-            digest.get("title"),
-            digest.get("summary"),
-            json.dumps(digest.get("themes", [])),
-            digest.get("script"),
-            datetime.now(timezone.utc).isoformat()
-        ))
-
-        conn.commit()
-        print(f"\n✅ Digest saved: {digest.get('title')}")
-        print(f"Summary: {digest.get('summary')}")
-        print(f"Themes: {', '.join(digest.get('themes', []))}")
-        print(f"Script length: {len(digest.get('script', ''))} characters")
-
-    except Exception as e:
-        print(f"❌ Neon Save Error: {e}")
-        raise
-    finally:
-        if 'conn' in locals():
-            conn.close()
-
+    print(f"\n✅ Digest saved: {digest.get('title')}")
+    print(f"Themes: {', '.join(digest.get('themes', []))}")
+    print(f"Script length: {len(digest.get('script', ''))} chars")
     return digest
 
-# ─── STEP 6: MARK ARTICLES AS PROCESSED ───────────────────
+# ─── STEP 6: MARK ARTICLES PROCESSED ─────────────────────
+
 def mark_articles_processed(week, year):
-    try:
-        conn = psycopg2.connect(NEON_URL)
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            UPDATE articles
-            SET processed = TRUE
-            WHERE week_number = %s AND year = %s
-        """, (week, year))
-
-        conn.commit()
-        print("Articles marked as processed.")
-    except Exception as e:
-        print(f"❌ Neon Update Error: {e}")
-        raise
-    finally:
-        if 'conn' in locals():
-            conn.close()
+    conn = get_conn()
+    cur  = conn.cursor()
+    cur.execute("""
+        UPDATE articles SET processed = TRUE
+        WHERE week_number = %s AND year = %s
+    """, (week, year))
+    conn.commit()
+    cur.close(); conn.close()
+    print("Articles marked as processed.")
 
 # ─── MAIN ─────────────────────────────────────────────────
+
 def run():
     print("=" * 60)
     print(f"ESG Digest Generator — {datetime.now().strftime('%Y-%m-%d %H:%M UTC')}")
     print("=" * 60)
-
     articles, week, year = fetch_weeks_articles()
-
     if not articles:
         print("No new articles this week. Exiting.")
         return
+    enrichments = enrich_with_search()
+    prompt      = build_prompt(articles, enrichments)
+    raw         = generate_digest(prompt)
+    digest      = save_digest(raw, week, year)
+    if digest:
+        mark_articles_processed(week, year)
 
-    enrichments = enrich_with_search(articles)
-    prompt = build_prompt(articles, enrichments)
-
-    # Add this delay to avoid 429 errors
-    print("Waiting to avoid Mistral rate limits...")
-    time.sleep(2)  # Wait 2 seconds
+if __name__ == "__main__":
+    run()
