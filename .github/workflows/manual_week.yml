@@ -1,0 +1,63 @@
+name: Manual Weekly Digest (specific week)
+
+on:
+  workflow_dispatch:
+    inputs:
+      week_number:
+        description: 'ISO week number (e.g. 14)'
+        required: true
+        type: number
+      year:
+        description: 'Year (e.g. 2026)'
+        required: true
+        default: '2026'
+        type: number
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4.2.2
+
+      - name: Set up Python
+        uses: actions/setup-python@v5.4.0
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run scraper
+        env:
+          NEON_POSTGRES_URL: ${{ secrets.NEON_POSTGRES_URL }}
+          TARGET_WEEK: ${{ inputs.week_number }}
+          TARGET_YEAR: ${{ inputs.year }}
+        run: python scraper.py
+
+      - name: Generate digest
+        env:
+          NEON_POSTGRES_URL: ${{ secrets.NEON_POSTGRES_URL }}
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+          TARGET_WEEK: ${{ inputs.week_number }}
+          TARGET_YEAR: ${{ inputs.year }}
+        run: python digest.py
+
+      - name: Generate audio
+        env:
+          NEON_POSTGRES_URL: ${{ secrets.NEON_POSTGRES_URL }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          TARGET_WEEK: ${{ inputs.week_number }}
+          TARGET_YEAR: ${{ inputs.year }}
+        run: python tts.py
+
+      - name: Generate RSS feed
+        env:
+          NEON_POSTGRES_URL: ${{ secrets.NEON_POSTGRES_URL }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: python rss.py
