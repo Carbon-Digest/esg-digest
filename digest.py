@@ -1,211 +1,216 @@
-import os
-import json
+import feedparser
 import requests
 import psycopg2
 import psycopg2.extras
-from datetime import datetime, timezone
+from bs4 import BeautifulSoup
+from datetime import datetime, timezone, timedelta
+import os
 
 # ─── CONFIG ───────────────────────────────────────────────
 
-NEON_URL    = os.environ["NEON_POSTGRES_URL"]
-MISTRAL_KEY = os.environ["MISTRAL_API_KEY"]
+NEON_URL = os.environ["NEON_POSTGRES_URL"]
+HEADERS  = {"User-Agent": "Mozilla/5.0 (compatible; ESG-Digest-Bot/1.0)"}
 
-MISTRAL_MODEL = "mistral-small-latest"
-MISTRAL_URL   = "https://api.mistral.ai/v1/chat/completions"
+_now        = datetime.now(timezone.utc)
+_iso        = _now.isocalendar()
+TARGET_WEEK = int(os.environ.get("TARGET_WEEK", _iso[1]))
+TARGET_YEAR = int(os.environ.get("TARGET_YEAR", _iso[0]))
+
+ONE_WEEK_AGO = datetime.now(timezone.utc) - timedelta(days=7)
+
+# ─── DB HELPERS ───────────────────────────────────────────
 
 def get_conn():
     return psycopg2.connect(NEON_URL)
 
-# ─── STEP 1: FETCH THIS WEEK'S ARTICLES ───────────────────
-
-def fetch_weeks_articles():
-    now  = datetime.now(timezone.utc)
-    iso  = now.isocalendar()
-    week, year = iso[1], iso[0]
-    print(f"Fetching articles for week {week}/{year}...")
-    conn = get_conn()
-    cur  = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    cur.execute("""
-        SELECT source_label, title, url, body_text, published_at
-        FROM articles
-        WHERE week_number = %s AND year = %s AND processed = FALSE
-    """, (week, year))
-    articles = cur.fetchall()
-    cur.close(); conn.close()
-    print(f"Found {len(articles)} articles.")
-    return list(articles), week, year
-
-# ─── STEP 2: WEB SEARCH ENRICHMENT ───────────────────────
-
-def web_search(query):
+def save_article(source_label, title, url, published_at, body_text):
     try:
-        r = requests.get(
-            "https://api.duckduckgo.com/",
-            params={"q": query, "format": "json", "no_html": 1, "skip_disambig": 1},
-            timeout=10
-        )
-        data = r.json()
-        results = []
-        if data.get("Abstract"):
-            results.append(data["Abstract"])
-        for topic in data.get("RelatedTopics", [])[:3]:
-            if isinstance(topic, dict) and topic.get("Text"):
-                results.append(topic["Text"])
-        return " | ".join(results)
+        conn = get_conn()
+        cur  = conn.cursor()
+        cur.execute("SELECT id FROM articles WHERE url = %s", (url,))
+        if cur.fetchone():
+            print(f"  ~ Skipping (exists): {title[:60]}")
+            cur.close(); conn.close()
+            return
+        cur.execute("""
+            INSERT INTO articles
+                (source_label, title, url, published_at, body_text,
+                 processed, week_number, year, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (
+            source_label, title, url,
+            published_at.isoformat() if published_at else None,
+            body_text[:50000], False,
+            TARGET_WEEK, TARGET_YEAR,
+            datetime.now(timezone.utc).isoformat()
+        ))
+        conn.commit()
+        print(f"  ✓ Saved: {title[:70]}")
     except Exception as e:
-        print(f"  Search error: {e}")
+        print(f"  ✗ DB error: {e}")
+    finally:
+        cur.close(); conn.close()
+
+def fetch_article_body(url):
+    try:
+        r = requests.get(url, headers=HEADERS, timeout=15)
+        soup = BeautifulSoup(r.text, "html.parser")
+        for tag in soup(["nav", "footer", "script", "style", "header"]):
+            tag.decompose()
+        return soup.get_text(separator=" ", strip=True)
+    except Exception:
         return ""
 
-def enrich_with_search():
-    print("Enriching with web search...")
-    queries = [
-        "ESG reporting standards 2026 latest",
-        "carbon markets CBAM update 2026",
-        "climate finance developments 2026",
-        "sustainability disclosure regulations 2026",
-    ]
-    enrichments = {}
-    for q in queries:
-        result = web_search(q)
-        if result:
-            enrichments[q] = result
-    return enrichments
+# ─── 1. DAVID CARLIN — RSS ────────────────────────────────
 
-# ─── STEP 3: BUILD PROMPT ─────────────────────────────────
+def fetch_substack():
+    label = "David Carlin / Substack"
+    print(f"\n→ {label}")
+    feed = feedparser.parse("https://davidcarlin.substack.com/feed")
+    for entry in feed.entries:
+        pub = entry.get("published_parsed")
+        pub_dt = datetime(*pub[:6], tzinfo=timezone.utc) if pub else None
+        if pub_dt and pub_dt < ONE_WEEK_AGO:
+            continue
+        body = BeautifulSoup(
+            entry.get("summary", ""), "html.parser"
+        ).get_text(separator=" ", strip=True)
+        save_article(label, entry.title, entry.link, pub_dt, body)
 
-def build_prompt(articles, enrichments):
-    articles_text = ""
-    for i, a in enumerate(articles, 1):
-        articles_text += f"""
----
-Article {i}
-Source: {a['source_label']}
-Title: {a['title']}
-Content: {str(a['body_text'])[:3000]}
-"""
-    enrichment_text = "\n".join(
-        f"Search: {q}\nResult: {r}" for q, r in enrichments.items() if r
-    )
+# ─── 2. SBTI NEWS ─────────────────────────────────────────
 
-    return f"""You are an AI system that produces a weekly podcast called "The ESG and Climate Briefing" — an automated, AI-generated digest for sustainability, climate finance, and non-financial reporting practitioners.
+def fetch_sbti():
+    label = "SBTi News"
+    print(f"\n→ {label}")
+    r = requests.get("https://sciencebasedtargets.org/news", headers=HEADERS, timeout=15)
+    soup = BeautifulSoup(r.text, "html.parser")
+    seen = set()
+    for a in soup.select("a[href*='/news/']"):
+        title = a.get_text(strip=True)
+        href  = a.get("href", "")
+        if not title or len(title) < 15 or href in seen:
+            continue
+        seen.add(href)
+        url = href if href.startswith("http") else "https://sciencebasedtargets.org" + href
+        body = fetch_article_body(url)
+        save_article(label, title, url, datetime.now(timezone.utc), body)
 
-Your tone is: factual, clear, and informative. You are not a human host — you are an AI summarising and synthesising information from trusted sources. You do not express opinions, use casual language, or pretend to have personal perspectives.
+# ─── 3. WRI NEWS ──────────────────────────────────────────
 
-TASK:
-1. Read all the articles below from this week's sources
-2. Identify key themes, grouping related stories together
-3. Eliminate repetition — synthesize overlapping stories into one richer account
-4. Weave in the web search enrichment results naturally where relevant
-5. Write a complete podcast script of approximately 3,500–4,500 words (shorter if quiet week)
+def fetch_wri():
+    label = "WRI News"
+    print(f"\n→ {label}")
+    r = requests.get("https://www.wri.org/news", headers=HEADERS, timeout=15)
+    soup = BeautifulSoup(r.text, "html.parser")
+    seen = set()
+    for a in soup.select("a[href*='/news/']"):
+        title = a.get_text(strip=True)
+        href  = a.get("href", "")
+        if not title or len(title) < 15 or href in seen:
+            continue
+        seen.add(href)
+        url = href if href.startswith("http") else "https://www.wri.org" + href
+        body = fetch_article_body(url)
+        save_article(label, title, url, datetime.now(timezone.utc), body)
 
-SCRIPT STRUCTURE:
-- [INTRO] Always open with: "This is the ESG and Climate Briefing — an AI-generated digest of last week's most important developments in sustainability, climate finance, carbon accounting, and non-financial reporting. This is week [X] of [YEAR]. This week's digest covers [topic 1], [topic 2], and [topic 3]."
-- [SECTIONS] One section per major theme, with clear factual transitions
-- [SOURCE MENTIONS] Always attribute clearly: "The Science Based Targets initiative published...", "Carbon Brief reported...", "The GHG Protocol announced...", etc.
-- [OUTRO] Close with: "That concludes this week's ESG and Climate Briefing. This digest was compiled by an AI system from the following sources: [list sources used]. Source links are available in the show notes. This briefing is generated automatically each week."
+# ─── 4. GHG PROTOCOL ─────────────────────────────────────
 
-FORMATTING RULES:
-- Write exactly as it will be spoken — no bullet points, no headers
-- Factual, clear, informative tone — no casual language or personal opinions
-- Mark meaningful pauses with [PAUSE]
+def fetch_ghgprotocol():
+    label = "GHG Protocol"
+    print(f"\n→ {label}")
+    r = requests.get("https://ghgprotocol.org/blog", headers=HEADERS, timeout=15)
+    soup = BeautifulSoup(r.text, "html.parser")
+    seen = set()
+    for a in soup.select("a[href*='/blog/']"):
+        title = a.get_text(strip=True)
+        href  = a.get("href", "")
+        if not title or len(title) < 15 or href in seen:
+            continue
+        seen.add(href)
+        url = href if href.startswith("http") else "https://ghgprotocol.org" + href
+        body = fetch_article_body(url)
+        save_article(label, title, url, datetime.now(timezone.utc), body)
 
-OUTPUT: Return ONLY a JSON object with no markdown fences:
-{{
-  "title": "The ESG and Climate Briefing — Week [X], [YEAR]",
-  "summary": "2-3 sentence plain text summary for show notes",
-  "themes": ["theme 1", "theme 2", "theme 3"],
-  "script": "the full podcast script as a single string with paragraph breaks as \\n\\n"
-}}
+# ─── 5. CLIMATE-ADAPT EEA ────────────────────────────────
 
-THIS WEEK'S ARTICLES:
-{articles_text}
-
-LATEST WEB SEARCH ENRICHMENT:
-{enrichment_text if enrichment_text else "No additional search results available."}
-"""
-
-# ─── STEP 4: CALL MISTRAL ─────────────────────────────────
-
-def generate_digest(prompt):
-    print(f"Sending to Mistral ({MISTRAL_MODEL})...")
-    headers = {
-        "Authorization": f"Bearer {MISTRAL_KEY}",
-        "Content-Type": "application/json"
-    }
-    payload = {
-        "model": MISTRAL_MODEL,
-        "messages": [{"role": "user", "content": prompt}],
-        "max_tokens": 8000,
-        "temperature": 0.4
-    }
-    r = requests.post(MISTRAL_URL, headers=headers, json=payload, timeout=120)
-    r.raise_for_status()
-    return r.json()["choices"][0]["message"]["content"].strip()
-
-# ─── STEP 5: PARSE AND SAVE ───────────────────────────────
-
-def save_digest(raw_response, week, year):
-    clean = raw_response.replace("```json", "").replace("```", "").strip()
+def fetch_climate_adapt():
+    label = "Climate-ADAPT (EEA)"
+    base  = "https://climate-adapt.eea.europa.eu"
+    print(f"\n→ {label}")
     try:
-        digest = json.loads(clean)
-    except json.JSONDecodeError as e:
-        print(f"JSON parse error: {e}")
-        with open("digest_raw.txt", "w") as f:
-            f.write(raw_response)
-        print("Raw response saved to digest_raw.txt")
-        return None
+        r = requests.get(f"{base}/en/news-archive", headers=HEADERS, timeout=45)
+    except requests.exceptions.Timeout:
+        print("  ⚠ Climate-ADAPT timed out — skipping.")
+        return
+    soup = BeautifulSoup(r.text, "html.parser")
+    seen = set()
+    for a in soup.select("a[href*='/news-archive/']"):
+        title = a.get_text(strip=True)
+        href  = a.get("href", "")
+        if not title or len(title) < 15 or href in seen:
+            continue
+        seen.add(href)
+        url = href if href.startswith("http") else base + href
+        try:
+            body = fetch_article_body(url)
+        except Exception:
+            body = title
+        save_article(label, title, url, datetime.now(timezone.utc), body)
 
-    conn = get_conn()
-    cur  = conn.cursor()
-    cur.execute("""
-        INSERT INTO digests
-            (week_number, year, title, summary, themes, script, audio_url, created_at)
-        VALUES (%s, %s, %s, %s, %s, %s, NULL, %s)
-    """, (
-        week, year,
-        digest.get("title"),
-        digest.get("summary"),
-        json.dumps(digest.get("themes", [])),
-        digest.get("script"),
-        datetime.now(timezone.utc).isoformat()
-    ))
-    conn.commit()
-    cur.close(); conn.close()
+# ─── 6. CARBON BRIEF DEBRIEFED ───────────────────────────
 
-    print(f"\n✅ Digest saved: {digest.get('title')}")
-    print(f"Themes: {', '.join(digest.get('themes', []))}")
-    print(f"Script length: {len(digest.get('script', ''))} chars")
-    return digest
+def fetch_carbonbrief():
+    label = "Carbon Brief / DeBriefed"
+    print(f"\n→ {label}")
+    feed = feedparser.parse("https://www.carbonbrief.org/feed/")
+    for entry in feed.entries:
+        tags = [t.get("term", "").lower() for t in entry.get("tags", [])]
+        if "debriefed" not in tags and "debriefed" not in entry.get("link", "").lower():
+            continue
+        pub = entry.get("published_parsed")
+        pub_dt = datetime(*pub[:6], tzinfo=timezone.utc) if pub else None
+        if pub_dt and pub_dt < ONE_WEEK_AGO:
+            continue
+        body = BeautifulSoup(
+            entry.get("summary", ""), "html.parser"
+        ).get_text(separator=" ", strip=True)
+        save_article(label, entry.title, entry.link, pub_dt, body)
 
-# ─── STEP 6: MARK ARTICLES PROCESSED ─────────────────────
+# ─── 7. KOLUM CBAM ───────────────────────────────────────
 
-def mark_articles_processed(week, year):
-    conn = get_conn()
-    cur  = conn.cursor()
-    cur.execute("""
-        UPDATE articles SET processed = TRUE
-        WHERE week_number = %s AND year = %s
-    """, (week, year))
-    conn.commit()
-    cur.close(); conn.close()
-    print("Articles marked as processed.")
+def fetch_kolum():
+    label = "Kolum CBAM Weekly"
+    print(f"\n→ {label}")
+    try:
+        r = requests.get("https://www.kolum.earth/en/cbam/weekly", headers=HEADERS, timeout=15)
+        soup = BeautifulSoup(r.text, "html.parser")
+        for tag in soup(["nav", "footer", "script", "style", "header"]):
+            tag.decompose()
+        body = soup.get_text(separator=" ", strip=True)
+        if len(body) > 300:
+            save_article(label, f"CBAM Weekly — {datetime.now().strftime('%Y-W%V')}",
+                         "https://www.kolum.earth/en/cbam/weekly",
+                         datetime.now(timezone.utc), body)
+        else:
+            print("  ⚠ Kolum appears JS-rendered — content too short.")
+    except Exception as e:
+        print(f"  ✗ Error: {e}")
 
 # ─── MAIN ─────────────────────────────────────────────────
 
 def run():
     print("=" * 60)
-    print(f"ESG Digest Generator — {datetime.now().strftime('%Y-%m-%d %H:%M UTC')}")
+    print(f"ESG Digest Scraper — {datetime.now().strftime('%Y-%m-%d %H:%M UTC')}")
+    print(f"Target: Week {TARGET_WEEK}/{TARGET_YEAR}")
     print("=" * 60)
-    articles, week, year = fetch_weeks_articles()
-    if not articles:
-        print("No new articles this week. Exiting.")
-        return
-    enrichments = enrich_with_search()
-    prompt      = build_prompt(articles, enrichments)
-    raw         = generate_digest(prompt)
-    digest      = save_digest(raw, week, year)
-    if digest:
-        mark_articles_processed(week, year)
+    fetch_substack()
+    fetch_sbti()
+    fetch_wri()
+    fetch_ghgprotocol()
+    fetch_climate_adapt()
+    fetch_carbonbrief()
+    fetch_kolum()
+    print("\n✅ Done.")
 
 if __name__ == "__main__":
     run()
