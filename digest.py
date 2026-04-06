@@ -119,7 +119,7 @@ FORMATTING RULES:
 - Write exactly as it will be spoken — no bullet points, no headers
 - Mark meaningful pauses with [PAUSE]
 
-OUTPUT: Return ONLY a JSON object with no markdown fences:
+OUTPUT: Return ONLY a JSON object with no markdown fences. The "script" field must use \\n\\n for paragraph breaks — never raw newlines or tab characters inside the JSON string:
 {{
   "title": "The Climate Digest — Week [X], [YEAR]",
   "summary": "2-3 sentence plain text summary for show notes",
@@ -156,14 +156,32 @@ def generate_digest(prompt):
 
 def save_digest(raw_response, week, year):
     clean = raw_response.replace("```json", "").replace("```", "").strip()
+
+    # Fix common control character issues before parsing
+    import re
+    clean = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f]', '', clean)  # remove bad control chars
+    clean = clean.replace('\n', '\\n').replace('\r', '\\r').replace('\t', '\\t')
+
+    # But don't double-escape already escaped sequences
+    clean = clean.replace('\\\\n', '\\n').replace('\\\\r', '\\r').replace('\\\\t', '\\t')
+
     try:
         digest = json.loads(clean)
-    except json.JSONDecodeError as e:
-        print(f"JSON parse error: {e}")
-        with open("digest_raw.txt", "w") as f:
-            f.write(raw_response)
-        print("Raw response saved to digest_raw.txt")
-        return None
+    except json.JSONDecodeError:
+        # Last resort: extract fields manually with regex
+        try:
+            title   = re.search(r'"title"\s*:\s*"([^"]+)"', clean).group(1)
+            summary = re.search(r'"summary"\s*:\s*"([^"]+)"', clean).group(1)
+            themes  = re.findall(r'"([^"]+)"', re.search(r'"themes"\s*:\s*\[([^\]]+)\]', clean).group(1))
+            script  = re.search(r'"script"\s*:\s*"(.*?)"\s*}', clean, re.DOTALL).group(1)
+            digest  = {"title": title, "summary": summary, "themes": themes, "script": script}
+            print("Recovered digest via regex fallback.")
+        except Exception as e:
+            print(f"Could not recover digest: {e}")
+            with open("digest_raw.txt", "w") as f:
+                f.write(raw_response)
+            print("Raw response saved to digest_raw.txt")
+            return None
 
     # Override title with correct week regardless of what Mistral wrote
     digest["title"] = f"The Climate Digest — Week {week}, {year}"
