@@ -115,7 +115,7 @@ TASK:
 6. Write a concise podcast script of approximately 2,500–3,500 words for an expert audience
 
 SCRIPT STRUCTURE:
-- [INTRO] Keep it short — 3 sentences maximum. Open with: "This is the Climate Digest, an AI-generated weekly briefing on sustainability, climate finance, and non-financial reporting. Week [X], [YEAR]. This week: [topic 1], [topic 2], and [topic 3]."
+- [INTRO] Keep it short — 3 sentences maximum. Open with: "This is the Climate Digest, an AI-generated weekly briefing on sustainability, climate finance, and non-financial reporting. Episode [N]. This week: [topic 1], [topic 2], and [topic 3]."
 - [SECTIONS] One section per major theme. Transitions between sections should be a single smooth sentence — no abrupt stops. Vary transition phrases so they don't feel repetitive.
 - [SOURCE MENTIONS] Attribute clearly but naturally within the flow of the sentence. Never start two consecutive sentences with a source name.
 - [OUTRO] Two sentences maximum: "That concludes this week's Climate Digest, compiled automatically from [sources]. Links in the show notes."
@@ -132,7 +132,7 @@ FORMATTING RULES:
 
 OUTPUT: Return ONLY a JSON object with no markdown fences. The "script" field must use \\n\\n for paragraph breaks — never raw newlines or tab characters inside the JSON string:
 {{
-  "title": "The Climate Digest — Week [X], [YEAR]",
+  "title": "The Climate Digest — Episode [N]",
   "summary": "2-3 sentence plain text summary for show notes",
   "themes": ["theme 1", "theme 2", "theme 3"],
   "script": "the full podcast script as a single string with paragraph breaks as \\n\\n"
@@ -197,8 +197,14 @@ def save_digest(raw_response, week, year):
                 print("Full response saved to digest_raw.txt")
                 return None
 
-    # Override title with correct week regardless of what Mistral wrote
-    digest["title"] = f"The Climate Digest — Week {week}, {year}"
+    # Get episode number (count existing digests + 1)
+    conn_ep = get_conn()
+    cur_ep  = conn_ep.cursor()
+    cur_ep.execute("SELECT COUNT(*) FROM digests")
+    ep_number = cur_ep.fetchone()[0] + 1
+    cur_ep.close(); conn_ep.close()
+
+    digest["title"] = f"The Climate Digest — Episode {ep_number}"
 
     conn = get_conn()
     cur  = conn.cursor()
