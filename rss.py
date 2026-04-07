@@ -18,7 +18,7 @@ PODCAST_EMAIL       = os.environ.get("PODCAST_EMAIL", "")
 PODCAST_LANGUAGE    = "en-gb"
 PODCAST_CATEGORY    = "Business"
 PODCAST_SUBCATEGORY = "Non-Profit"
-PODCAST_ARTWORK     = "https://placehold.co/1400x1400/166534/ffffff/png?text=ESG+Briefing"
+PODCAST_ARTWORK     = "https://github.com/Carbon-Digest/esg-digest/blob/main/bca23b39-0728-46cf-bd8c-7faefc13e8f0.jpg"
 
 def get_conn():
     return psycopg2.connect(NEON_URL)
