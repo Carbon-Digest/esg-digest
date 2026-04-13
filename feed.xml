@@ -17,9 +17,20 @@
     </itunes:category>
     <itunes:explicit>false</itunes:explicit>
     <itunes:type>episodic</itunes:type>
-    <itunes:image href="https://placehold.co/1400x1400/166534/ffffff/png?text=ESG+Briefing"/>
-    <lastBuildDate>Mon, 06 Apr 2026 14:29:03 +0000</lastBuildDate>
+    <itunes:image href="https://github.com/Carbon-Digest/esg-digest/blob/main/bca23b39-0728-46cf-bd8c-7faefc13e8f0.jpg"/>
+    <lastBuildDate>Mon, 13 Apr 2026 07:12:55 +0000</lastBuildDate>
     
+    <item>
+      <title>The Climate Digest — Episode 4</title>
+      <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-16-2026/digest_w16_2026.mp3</link>
+      <description>This week’s Climate Digest covers Microsoft’s abrupt suspension of its carbon removal procurement program, Australia’s accelerated push to reform its ACCU scheme, and the EU’s new wildfire resilience strategy. We also examine the latest trends in corporate climate target-setting and the shipping sector’s tax avoidance on carbon pricing.</description>
+      <enclosure url="https://github.com/Carbon-Digest/esg-digest/releases/download/week-16-2026/digest_w16_2026.mp3" length="2557440" type="audio/mpeg"/>
+      <guid isPermaLink="false">https://github.com/Carbon-Digest/esg-digest/releases/download/week-16-2026/digest_w16_2026.mp3</guid>
+      <pubDate>Mon, 13 Apr 2026 07:12:18 +0000</pubDate>
+      <itunes:duration>1200</itunes:duration>
+      <itunes:summary>This week’s Climate Digest covers Microsoft’s abrupt suspension of its carbon removal procurement program, Australia’s accelerated push to reform its ACCU scheme, and the EU’s new wildfire resilience strategy. We also examine the latest trends in corporate climate target-setting and the shipping sector’s tax avoidance on carbon pricing.</itunes:summary>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
     <item>
       <title>The Climate Digest — Week 15, 2026</title>
       <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-15-2026/digest_w15_2026.mp3</link>
