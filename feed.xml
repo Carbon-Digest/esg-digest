@@ -18,8 +18,19 @@
     <itunes:explicit>false</itunes:explicit>
     <itunes:type>episodic</itunes:type>
     <itunes:image href="https://github.com/Carbon-Digest/esg-digest/blob/main/bca23b39-0728-46cf-bd8c-7faefc13e8f0.jpg"/>
-    <lastBuildDate>Mon, 13 Apr 2026 07:12:55 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 20 Apr 2026 07:14:54 +0000</lastBuildDate>
     
+    <item>
+      <title>The Climate Digest — Episode 5</title>
+      <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-17-2026/digest_w17_2026.mp3</link>
+      <description>This week’s Climate Digest covers India’s new 2035 climate commitment, SBTi’s latest governance and FLAG guidance updates, Indonesia’s carbon exchange roadmap, and the ICJ’s climate opinion reshaping legal risks for fossil fuel directors. We also highlight new tools for urban heat mapping and European climate adaptation needs.</description>
+      <enclosure url="https://github.com/Carbon-Digest/esg-digest/releases/download/week-17-2026/digest_w17_2026.mp3" length="2309760" type="audio/mpeg"/>
+      <guid isPermaLink="false">https://github.com/Carbon-Digest/esg-digest/releases/download/week-17-2026/digest_w17_2026.mp3</guid>
+      <pubDate>Mon, 20 Apr 2026 07:14:02 +0000</pubDate>
+      <itunes:duration>1200</itunes:duration>
+      <itunes:summary>This week’s Climate Digest covers India’s new 2035 climate commitment, SBTi’s latest governance and FLAG guidance updates, Indonesia’s carbon exchange roadmap, and the ICJ’s climate opinion reshaping legal risks for fossil fuel directors. We also highlight new tools for urban heat mapping and European climate adaptation needs.</itunes:summary>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
     <item>
       <title>The Climate Digest — Episode 4</title>
       <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-16-2026/digest_w16_2026.mp3</link>
