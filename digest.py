@@ -113,9 +113,10 @@ TASK:
 4. Eliminate repetition — if multiple sources cover the same story, synthesize into one account
 5. Use web search enrichment only to add the very latest context to current stories — not to add older background
 6. Write a concise podcast script of approximately 2,500–3,500 words for an expert audience
+7. do not include news or general information presented in previous episodes in detail.
 
 SCRIPT STRUCTURE:
-- [INTRO] Keep it short — 3 sentences maximum. Open with: "This is the Climate Digest, an AI-generated weekly briefing on sustainability, climate finance, and non-financial reporting. Episode [N]. This week: [topic 1], [topic 2], and [topic 3]."
+- [INTRO] Keep it short — 3 sentences maximum. Open with: "This is the Climate Digest, an AI-generated weekly briefing on climate change, climate finance, and non-financial reporting. Episode [N]. This week: [topic 1], [topic 2], and [topic 3]."
 - [SECTIONS] One section per major theme. Transitions between sections should be a single smooth sentence — no abrupt stops. Vary transition phrases so they don't feel repetitive.
 - [SOURCE MENTIONS] Attribute clearly but naturally within the flow of the sentence. Never start two consecutive sentences with a source name.
 - [OUTRO] Two sentences maximum: "That concludes this week's Climate Digest, compiled automatically from [sources]. Links in the show notes."
