@@ -18,8 +18,19 @@
     <itunes:explicit>false</itunes:explicit>
     <itunes:type>episodic</itunes:type>
     <itunes:image href="https://github.com/Carbon-Digest/esg-digest/blob/main/bca23b39-0728-46cf-bd8c-7faefc13e8f0.jpg"/>
-    <lastBuildDate>Mon, 20 Apr 2026 07:14:54 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 27 Apr 2026 07:32:49 +0000</lastBuildDate>
     
+    <item>
+      <title>The Climate Digest — Episode 6</title>
+      <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-18-2026/digest_w18_2026.mp3</link>
+      <description>This week’s digest covers the SBTi’s power sector net-zero standard pilot, corporate calls for the EU to run 50% of its economy on clean power by 2040, new wildfire strategies in Europe, and Malaysia’s push for a palm oil carbon credit framework. It also highlights Colombia’s water sustainability commitment and the US bipartisan geothermal and ocean innovation bills.</description>
+      <enclosure url="https://github.com/Carbon-Digest/esg-digest/releases/download/week-18-2026/digest_w18_2026.mp3" length="2334816" type="audio/mpeg"/>
+      <guid isPermaLink="false">https://github.com/Carbon-Digest/esg-digest/releases/download/week-18-2026/digest_w18_2026.mp3</guid>
+      <pubDate>Mon, 27 Apr 2026 07:31:57 +0000</pubDate>
+      <itunes:duration>1200</itunes:duration>
+      <itunes:summary>This week’s digest covers the SBTi’s power sector net-zero standard pilot, corporate calls for the EU to run 50% of its economy on clean power by 2040, new wildfire strategies in Europe, and Malaysia’s push for a palm oil carbon credit framework. It also highlights Colombia’s water sustainability commitment and the US bipartisan geothermal and ocean innovation bills.</itunes:summary>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
     <item>
       <title>The Climate Digest — Episode 5</title>
       <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-17-2026/digest_w17_2026.mp3</link>
