@@ -17,9 +17,20 @@
     </itunes:category>
     <itunes:explicit>false</itunes:explicit>
     <itunes:type>episodic</itunes:type>
-    <itunes:image href="https://gcdnb.pbrd.co/images/raTJsbhpcTCz.jpg"
-    <lastBuildDate>Mon, 27 Apr 2026 07:32:49 +0000</lastBuildDate>
+    <itunes:image href="https://gcdnb.pbrd.co/images/raTJsbhpcTCz.jpg"/>
+    <lastBuildDate>Mon, 04 May 2026 07:46:33 +0000</lastBuildDate>
     
+    <item>
+      <title>The Climate Digest — Episode 7</title>
+      <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-19-2026/digest_w19_2026.mp3</link>
+      <description>This week’s digest covers SBTi’s updated FLAG guidance and Absolute Contraction Approach, the GHG Protocol’s new CEO, a coalition advancing beyond fossil fuels, and new data on tropical deforestation and methane leaks. It also highlights Australia’s Safeguard Mechanism carbon credit demand, ADB’s $70bn cross-border energy push, and Europe’s urban green space inequities.</description>
+      <enclosure url="https://github.com/Carbon-Digest/esg-digest/releases/download/week-19-2026/digest_w19_2026.mp3" length="2509632" type="audio/mpeg"/>
+      <guid isPermaLink="false">https://github.com/Carbon-Digest/esg-digest/releases/download/week-19-2026/digest_w19_2026.mp3</guid>
+      <pubDate>Mon, 04 May 2026 07:45:35 +0000</pubDate>
+      <itunes:duration>1200</itunes:duration>
+      <itunes:summary>This week’s digest covers SBTi’s updated FLAG guidance and Absolute Contraction Approach, the GHG Protocol’s new CEO, a coalition advancing beyond fossil fuels, and new data on tropical deforestation and methane leaks. It also highlights Australia’s Safeguard Mechanism carbon credit demand, ADB’s $70bn cross-border energy push, and Europe’s urban green space inequities.</itunes:summary>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
     <item>
       <title>The Climate Digest — Episode 6</title>
       <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-18-2026/digest_w18_2026.mp3</link>
