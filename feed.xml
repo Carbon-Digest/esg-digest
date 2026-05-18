@@ -18,8 +18,19 @@
     <itunes:explicit>false</itunes:explicit>
     <itunes:type>episodic</itunes:type>
     <itunes:image href="https://gcdnb.pbrd.co/images/raTJsbhpcTCz.jpg"/>
-    <lastBuildDate>Mon, 11 May 2026 08:22:47 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 18 May 2026 08:43:58 +0000</lastBuildDate>
     
+    <item>
+      <title>The Climate Digest — Episode 9</title>
+      <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-21-2026/digest_w21_2026.mp3</link>
+      <description>This week’s digest covers SBTi’s updated Absolute Contraction Approach and FLAG guidance, the UN’s piloting of Article 6 registries, Shanghai’s ETS expansion, and new corporate water risk standards. We also highlight WRI leadership changes, geothermal R&amp;D legislation, and a UN vote on the ICJ climate opinion.</description>
+      <enclosure url="https://github.com/Carbon-Digest/esg-digest/releases/download/week-21-2026/digest_w21_2026.mp3" length="3648960" type="audio/mpeg"/>
+      <guid isPermaLink="false">https://github.com/Carbon-Digest/esg-digest/releases/download/week-21-2026/digest_w21_2026.mp3</guid>
+      <pubDate>Mon, 18 May 2026 08:42:38 +0000</pubDate>
+      <itunes:duration>1200</itunes:duration>
+      <itunes:summary>This week’s digest covers SBTi’s updated Absolute Contraction Approach and FLAG guidance, the UN’s piloting of Article 6 registries, Shanghai’s ETS expansion, and new corporate water risk standards. We also highlight WRI leadership changes, geothermal R&amp;D legislation, and a UN vote on the ICJ climate opinion.</itunes:summary>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
     <item>
       <title>The Climate Digest — Episode 8</title>
       <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-20-2026/digest_w20_2026.mp3</link>
