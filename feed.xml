@@ -18,8 +18,19 @@
     <itunes:explicit>false</itunes:explicit>
     <itunes:type>episodic</itunes:type>
     <itunes:image href="https://gcdnb.pbrd.co/images/raTJsbhpcTCz.jpg"/>
-    <lastBuildDate>Mon, 18 May 2026 08:43:58 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 25 May 2026 08:53:55 +0000</lastBuildDate>
     
+    <item>
+      <title>The Climate Digest — Episode 10</title>
+      <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-22-2026/digest_w22_2026.mp3</link>
+      <description>This week’s Climate Digest unpacks the EUDR implementation roadmap, SBTi’s governance upgrades, and Indonesia’s aggressive carbon market expansion. We also cover new climate risk tools from the EU and NGFS, plus a methane mitigation deal with South Korea. All developments are fresh from the last seven days.</description>
+      <enclosure url="https://github.com/Carbon-Digest/esg-digest/releases/download/week-22-2026/digest_w22_2026.mp3" length="1734048" type="audio/mpeg"/>
+      <guid isPermaLink="false">https://github.com/Carbon-Digest/esg-digest/releases/download/week-22-2026/digest_w22_2026.mp3</guid>
+      <pubDate>Mon, 25 May 2026 08:53:22 +0000</pubDate>
+      <itunes:duration>1200</itunes:duration>
+      <itunes:summary>This week’s Climate Digest unpacks the EUDR implementation roadmap, SBTi’s governance upgrades, and Indonesia’s aggressive carbon market expansion. We also cover new climate risk tools from the EU and NGFS, plus a methane mitigation deal with South Korea. All developments are fresh from the last seven days.</itunes:summary>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
     <item>
       <title>The Climate Digest — Episode 9</title>
       <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-21-2026/digest_w21_2026.mp3</link>
