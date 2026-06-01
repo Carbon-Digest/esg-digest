@@ -18,8 +18,19 @@
     <itunes:explicit>false</itunes:explicit>
     <itunes:type>episodic</itunes:type>
     <itunes:image href="https://gcdnb.pbrd.co/images/raTJsbhpcTCz.jpg"/>
-    <lastBuildDate>Mon, 25 May 2026 08:53:55 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 01 Jun 2026 10:16:08 +0000</lastBuildDate>
     
+    <item>
+      <title>The Climate Digest — Episode 11</title>
+      <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-23-2026/digest_w23_2026.mp3</link>
+      <description>This week’s Climate Digest covers SBTi’s updated Absolute Contraction Approach, the Netherlands’ new climate risk assessment, and global shifts in carbon markets and adaptation frameworks. We also highlight new tools for clean cooking tracking, standardized water risk guidance, and geothermal policy developments.</description>
+      <enclosure url="https://github.com/Carbon-Digest/esg-digest/releases/download/week-23-2026/digest_w23_2026.mp3" length="3705984" type="audio/mpeg"/>
+      <guid isPermaLink="false">https://github.com/Carbon-Digest/esg-digest/releases/download/week-23-2026/digest_w23_2026.mp3</guid>
+      <pubDate>Mon, 01 Jun 2026 10:14:43 +0000</pubDate>
+      <itunes:duration>1200</itunes:duration>
+      <itunes:summary>This week’s Climate Digest covers SBTi’s updated Absolute Contraction Approach, the Netherlands’ new climate risk assessment, and global shifts in carbon markets and adaptation frameworks. We also highlight new tools for clean cooking tracking, standardized water risk guidance, and geothermal policy developments.</itunes:summary>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
     <item>
       <title>The Climate Digest — Episode 10</title>
       <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-22-2026/digest_w22_2026.mp3</link>
