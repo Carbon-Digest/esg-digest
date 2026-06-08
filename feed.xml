@@ -18,8 +18,19 @@
     <itunes:explicit>false</itunes:explicit>
     <itunes:type>episodic</itunes:type>
     <itunes:image href="https://gcdnb.pbrd.co/images/raTJsbhpcTCz.jpg"/>
-    <lastBuildDate>Mon, 01 Jun 2026 10:16:08 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 08 Jun 2026 09:22:14 +0000</lastBuildDate>
     
+    <item>
+      <title>The Climate Digest — Episode 12</title>
+      <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-24-2026/digest_w24_2026.mp3</link>
+      <description>This week’s Climate Digest covers SBTi’s governance overhaul and target-setting milestones, Indonesia’s draft climate justice law for carbon trading, New Zealand’s post-surrender NZU market shifts, and a surge in clean industry financing led by China. We also highlight WRI’s leadership transitions and a new carbon removal offtake call from Colombia.</description>
+      <enclosure url="https://github.com/Carbon-Digest/esg-digest/releases/download/week-24-2026/digest_w24_2026.mp3" length="2672208" type="audio/mpeg"/>
+      <guid isPermaLink="false">https://github.com/Carbon-Digest/esg-digest/releases/download/week-24-2026/digest_w24_2026.mp3</guid>
+      <pubDate>Mon, 08 Jun 2026 09:21:05 +0000</pubDate>
+      <itunes:duration>1200</itunes:duration>
+      <itunes:summary>This week’s Climate Digest covers SBTi’s governance overhaul and target-setting milestones, Indonesia’s draft climate justice law for carbon trading, New Zealand’s post-surrender NZU market shifts, and a surge in clean industry financing led by China. We also highlight WRI’s leadership transitions and a new carbon removal offtake call from Colombia.</itunes:summary>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
     <item>
       <title>The Climate Digest — Episode 11</title>
       <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-23-2026/digest_w23_2026.mp3</link>
