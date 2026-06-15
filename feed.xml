@@ -18,8 +18,19 @@
     <itunes:explicit>false</itunes:explicit>
     <itunes:type>episodic</itunes:type>
     <itunes:image href="https://gcdnb.pbrd.co/images/raTJsbhpcTCz.jpg"/>
-    <lastBuildDate>Mon, 08 Jun 2026 09:22:14 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 15 Jun 2026 10:53:06 +0000</lastBuildDate>
     
+    <item>
+      <title>The Climate Digest — Episode 13</title>
+      <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-25-2026/digest_w25_2026.mp3</link>
+      <description>This week, the SBTi releases its long-awaited Corporate Net-Zero Standard V2.0, while the EU advances enforcement of the EUDR and faces legal challenges over carbon removal rules. COP31 priorities emerge with electrification and ocean governance taking center stage, and new regulatory developments in Vietnam and Indonesia reshape compliance and carbon market dynamics.</description>
+      <enclosure url="https://github.com/Carbon-Digest/esg-digest/releases/download/week-25-2026/digest_w25_2026.mp3" length="2720736" type="audio/mpeg"/>
+      <guid isPermaLink="false">https://github.com/Carbon-Digest/esg-digest/releases/download/week-25-2026/digest_w25_2026.mp3</guid>
+      <pubDate>Mon, 15 Jun 2026 10:52:05 +0000</pubDate>
+      <itunes:duration>1200</itunes:duration>
+      <itunes:summary>This week, the SBTi releases its long-awaited Corporate Net-Zero Standard V2.0, while the EU advances enforcement of the EUDR and faces legal challenges over carbon removal rules. COP31 priorities emerge with electrification and ocean governance taking center stage, and new regulatory developments in Vietnam and Indonesia reshape compliance and carbon market dynamics.</itunes:summary>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
     <item>
       <title>The Climate Digest — Episode 12</title>
       <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-24-2026/digest_w24_2026.mp3</link>
