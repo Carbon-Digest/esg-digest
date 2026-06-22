@@ -18,8 +18,19 @@
     <itunes:explicit>false</itunes:explicit>
     <itunes:type>episodic</itunes:type>
     <itunes:image href="https://gcdnb.pbrd.co/images/raTJsbhpcTCz.jpg"/>
-    <lastBuildDate>Mon, 15 Jun 2026 10:53:06 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 22 Jun 2026 10:34:50 +0000</lastBuildDate>
     
+    <item>
+      <title>The Climate Digest — Episode 14</title>
+      <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-26-2026/digest_w26_2026.mp3</link>
+      <description>This week’s Climate Digest covers new carbon removal market developments, Asia’s rising dominance in corporate climate target-setting, and EU adaptation policy shifts. We also examine Japan’s potential CO2 permit shortfall for coal plants and the Singapore exchange’s governance scrutiny amid a carbon market dispute.</description>
+      <enclosure url="https://github.com/Carbon-Digest/esg-digest/releases/download/week-26-2026/digest_w26_2026.mp3" length="2334240" type="audio/mpeg"/>
+      <guid isPermaLink="false">https://github.com/Carbon-Digest/esg-digest/releases/download/week-26-2026/digest_w26_2026.mp3</guid>
+      <pubDate>Mon, 22 Jun 2026 10:34:09 +0000</pubDate>
+      <itunes:duration>1200</itunes:duration>
+      <itunes:summary>This week’s Climate Digest covers new carbon removal market developments, Asia’s rising dominance in corporate climate target-setting, and EU adaptation policy shifts. We also examine Japan’s potential CO2 permit shortfall for coal plants and the Singapore exchange’s governance scrutiny amid a carbon market dispute.</itunes:summary>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
     <item>
       <title>The Climate Digest — Episode 13</title>
       <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-25-2026/digest_w25_2026.mp3</link>
