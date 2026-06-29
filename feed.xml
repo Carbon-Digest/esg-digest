@@ -18,8 +18,19 @@
     <itunes:explicit>false</itunes:explicit>
     <itunes:type>episodic</itunes:type>
     <itunes:image href="https://gcdnb.pbrd.co/images/raTJsbhpcTCz.jpg"/>
-    <lastBuildDate>Mon, 22 Jun 2026 10:34:50 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 29 Jun 2026 09:24:28 +0000</lastBuildDate>
     
+    <item>
+      <title>The Climate Digest — Episode 15</title>
+      <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-27-2026/digest_w27_2026.mp3</link>
+      <description>This week’s Digest unpacks the SBTi’s Net-Zero Standard V2.0 and FLAG guidance updates, Vietnam’s carbon market launch, and new critiques of cookstove projects in India. We also cover COP31’s electrification goals, calls to center oceans in climate action, and a potential historic El Niño event with severe humanitarian implications.</description>
+      <enclosure url="https://github.com/Carbon-Digest/esg-digest/releases/download/week-27-2026/digest_w27_2026.mp3" length="2083824" type="audio/mpeg"/>
+      <guid isPermaLink="false">https://github.com/Carbon-Digest/esg-digest/releases/download/week-27-2026/digest_w27_2026.mp3</guid>
+      <pubDate>Mon, 29 Jun 2026 09:23:30 +0000</pubDate>
+      <itunes:duration>1200</itunes:duration>
+      <itunes:summary>This week’s Digest unpacks the SBTi’s Net-Zero Standard V2.0 and FLAG guidance updates, Vietnam’s carbon market launch, and new critiques of cookstove projects in India. We also cover COP31’s electrification goals, calls to center oceans in climate action, and a potential historic El Niño event with severe humanitarian implications.</itunes:summary>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
     <item>
       <title>The Climate Digest — Episode 14</title>
       <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-26-2026/digest_w26_2026.mp3</link>
