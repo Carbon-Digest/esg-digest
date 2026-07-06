@@ -18,8 +18,19 @@
     <itunes:explicit>false</itunes:explicit>
     <itunes:type>episodic</itunes:type>
     <itunes:image href="https://gcdnb.pbrd.co/images/raTJsbhpcTCz.jpg"/>
-    <lastBuildDate>Mon, 29 Jun 2026 09:24:28 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 06 Jul 2026 08:57:54 +0000</lastBuildDate>
     
+    <item>
+      <title>The Climate Digest — Episode 16</title>
+      <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-28-2026/digest_w28_2026.mp3</link>
+      <description>This week’s Digest covers the World Bank’s scaled-back climate finance ambitions, Mongolia’s landmark climate law, EU ETS reform preview, and a fivefold gap between carbon removal demand and supply by 2036. It also highlights record ocean finance commitments, a 150-tonne DAC plant in Berlin, and SBTi’s latest target-setting data.</description>
+      <enclosure url="https://github.com/Carbon-Digest/esg-digest/releases/download/week-28-2026/digest_w28_2026.mp3" length="2236464" type="audio/mpeg"/>
+      <guid isPermaLink="false">https://github.com/Carbon-Digest/esg-digest/releases/download/week-28-2026/digest_w28_2026.mp3</guid>
+      <pubDate>Mon, 06 Jul 2026 08:57:06 +0000</pubDate>
+      <itunes:duration>1200</itunes:duration>
+      <itunes:summary>This week’s Digest covers the World Bank’s scaled-back climate finance ambitions, Mongolia’s landmark climate law, EU ETS reform preview, and a fivefold gap between carbon removal demand and supply by 2036. It also highlights record ocean finance commitments, a 150-tonne DAC plant in Berlin, and SBTi’s latest target-setting data.</itunes:summary>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
     <item>
       <title>The Climate Digest — Episode 15</title>
       <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-27-2026/digest_w27_2026.mp3</link>
