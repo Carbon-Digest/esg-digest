@@ -18,8 +18,19 @@
     <itunes:explicit>false</itunes:explicit>
     <itunes:type>episodic</itunes:type>
     <itunes:image href="https://gcdnb.pbrd.co/images/raTJsbhpcTCz.jpg"/>
-    <lastBuildDate>Mon, 13 Jul 2026 08:14:08 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 20 Jul 2026 07:56:01 +0000</lastBuildDate>
     
+    <item>
+      <title>The Climate Digest — Episode 18</title>
+      <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-30-2026/digest_w30_2026.mp3</link>
+      <description>This week’s Climate Digest covers the EU’s 46% electrification target paired with carbon market reforms, SBTi’s second public consultation on its Power Sector Net-Zero Standard, and new research on biodiversity offsetting timelines. We also examine Singapore’s carbon pricing considerations in cross-border green power deals and Washington State’s first ECR auction.</description>
+      <enclosure url="https://github.com/Carbon-Digest/esg-digest/releases/download/week-30-2026/digest_w30_2026.mp3" length="3687120" type="audio/mpeg"/>
+      <guid isPermaLink="false">https://github.com/Carbon-Digest/esg-digest/releases/download/week-30-2026/digest_w30_2026.mp3</guid>
+      <pubDate>Mon, 20 Jul 2026 07:54:34 +0000</pubDate>
+      <itunes:duration>1200</itunes:duration>
+      <itunes:summary>This week’s Climate Digest covers the EU’s 46% electrification target paired with carbon market reforms, SBTi’s second public consultation on its Power Sector Net-Zero Standard, and new research on biodiversity offsetting timelines. We also examine Singapore’s carbon pricing considerations in cross-border green power deals and Washington State’s first ECR auction.</itunes:summary>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
     <item>
       <title>The Climate Digest — Episode 17</title>
       <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-29-2026/digest_w29_2026.mp3</link>
