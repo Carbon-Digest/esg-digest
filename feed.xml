@@ -18,8 +18,19 @@
     <itunes:explicit>false</itunes:explicit>
     <itunes:type>episodic</itunes:type>
     <itunes:image href="https://gcdnb.pbrd.co/images/raTJsbhpcTCz.jpg"/>
-    <lastBuildDate>Mon, 20 Jul 2026 07:56:01 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 27 Jul 2026 08:26:27 +0000</lastBuildDate>
     
+    <item>
+      <title>The Climate Digest — Episode 19</title>
+      <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-31-2026/digest_w31_2026.mp3</link>
+      <description>This week’s digest covers the SBTi’s new Technical Council appointments and updates to its Corporate Net-Zero Standard, policy shifts in Australia and New Zealand’s carbon markets, and a German report challenging EU carbon leakage assumptions. We also highlight global finance commitments for ocean action and COP31’s electrification goals.</description>
+      <enclosure url="https://github.com/Carbon-Digest/esg-digest/releases/download/week-31-2026/digest_w31_2026.mp3" length="1895040" type="audio/mpeg"/>
+      <guid isPermaLink="false">https://github.com/Carbon-Digest/esg-digest/releases/download/week-31-2026/digest_w31_2026.mp3</guid>
+      <pubDate>Mon, 27 Jul 2026 08:25:40 +0000</pubDate>
+      <itunes:duration>1200</itunes:duration>
+      <itunes:summary>This week’s digest covers the SBTi’s new Technical Council appointments and updates to its Corporate Net-Zero Standard, policy shifts in Australia and New Zealand’s carbon markets, and a German report challenging EU carbon leakage assumptions. We also highlight global finance commitments for ocean action and COP31’s electrification goals.</itunes:summary>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
     <item>
       <title>The Climate Digest — Episode 18</title>
       <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-30-2026/digest_w30_2026.mp3</link>
