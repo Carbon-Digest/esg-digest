@@ -18,8 +18,19 @@
     <itunes:explicit>false</itunes:explicit>
     <itunes:type>episodic</itunes:type>
     <itunes:image href="https://gcdnb.pbrd.co/images/raTJsbhpcTCz.jpg"/>
-    <lastBuildDate>Mon, 27 Jul 2026 08:26:27 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 03 Aug 2026 08:23:55 +0000</lastBuildDate>
     
+    <item>
+      <title>The Climate Digest — Episode 20</title>
+      <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-32-2026/digest_w32_2026.mp3</link>
+      <description>This week’s digest covers the EU’s 46% electrification target tied to carbon market reform, SBTi’s latest consultations on FLAG and power sector standards, and new developments in marine carbon removal credits, sustainable aviation fuel tracking, and Washington state’s APCR auction supply. It also highlights EU wildfire response measures, Mediterranean climate action planning, and Abu Dhabi’s desert restoration initiative.</description>
+      <enclosure url="https://github.com/Carbon-Digest/esg-digest/releases/download/week-32-2026/digest_w32_2026.mp3" length="2634336" type="audio/mpeg"/>
+      <guid isPermaLink="false">https://github.com/Carbon-Digest/esg-digest/releases/download/week-32-2026/digest_w32_2026.mp3</guid>
+      <pubDate>Mon, 03 Aug 2026 08:23:09 +0000</pubDate>
+      <itunes:duration>1200</itunes:duration>
+      <itunes:summary>This week’s digest covers the EU’s 46% electrification target tied to carbon market reform, SBTi’s latest consultations on FLAG and power sector standards, and new developments in marine carbon removal credits, sustainable aviation fuel tracking, and Washington state’s APCR auction supply. It also highlights EU wildfire response measures, Mediterranean climate action planning, and Abu Dhabi’s desert restoration initiative.</itunes:summary>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
     <item>
       <title>The Climate Digest — Episode 19</title>
       <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-31-2026/digest_w31_2026.mp3</link>
