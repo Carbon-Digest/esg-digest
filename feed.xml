@@ -18,8 +18,19 @@
     <itunes:explicit>false</itunes:explicit>
     <itunes:type>episodic</itunes:type>
     <itunes:image href="https://gcdnb.pbrd.co/images/raTJsbhpcTCz.jpg"/>
-    <lastBuildDate>Mon, 03 Aug 2026 08:23:55 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 10 Aug 2026 06:09:15 +0000</lastBuildDate>
     
+    <item>
+      <title>The Climate Digest — Episode 21</title>
+      <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-33-2026/digest_w33_2026.mp3</link>
+      <description>This week’s Climate Digest unpacks the SBTi’s latest governance and methodological updates, the $6.4 billion ocean finance pledge at the African Our Ocean Conference, and new trade-climate policy alignments from Bonn to New Jersey. We also highlight a 1% national emissions cut in New Zealand via steel decarbonization and a tripling of 45Q tax credit claims in the US despite compliance hurdles.</description>
+      <enclosure url="https://github.com/Carbon-Digest/esg-digest/releases/download/week-33-2026/digest_w33_2026.mp3" length="1389456" type="audio/mpeg"/>
+      <guid isPermaLink="false">https://github.com/Carbon-Digest/esg-digest/releases/download/week-33-2026/digest_w33_2026.mp3</guid>
+      <pubDate>Mon, 10 Aug 2026 06:08:39 +0000</pubDate>
+      <itunes:duration>1200</itunes:duration>
+      <itunes:summary>This week’s Climate Digest unpacks the SBTi’s latest governance and methodological updates, the $6.4 billion ocean finance pledge at the African Our Ocean Conference, and new trade-climate policy alignments from Bonn to New Jersey. We also highlight a 1% national emissions cut in New Zealand via steel decarbonization and a tripling of 45Q tax credit claims in the US despite compliance hurdles.</itunes:summary>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
     <item>
       <title>The Climate Digest — Episode 20</title>
       <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-32-2026/digest_w32_2026.mp3</link>
