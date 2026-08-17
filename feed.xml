@@ -18,8 +18,19 @@
     <itunes:explicit>false</itunes:explicit>
     <itunes:type>episodic</itunes:type>
     <itunes:image href="https://gcdnb.pbrd.co/images/raTJsbhpcTCz.jpg"/>
-    <lastBuildDate>Mon, 10 Aug 2026 06:09:15 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 17 Aug 2026 05:30:42 +0000</lastBuildDate>
     
+    <item>
+      <title>The Climate Digest — Episode 22</title>
+      <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-34-2026/digest_w34_2026.mp3</link>
+      <description>This week’s Climate Digest covers the SBTi’s latest consultations on FLAG and power sector standards, EU climate policy shifts including a 46% electrification target, and new research on carbon credit systems in Australia and California. We also highlight a biomass carbon removal offtake deal in Namibia and the EU’s emergency response to Mediterranean wildfires.</description>
+      <enclosure url="https://github.com/Carbon-Digest/esg-digest/releases/download/week-34-2026/digest_w34_2026.mp3" length="2938608" type="audio/mpeg"/>
+      <guid isPermaLink="false">https://github.com/Carbon-Digest/esg-digest/releases/download/week-34-2026/digest_w34_2026.mp3</guid>
+      <pubDate>Mon, 17 Aug 2026 05:29:39 +0000</pubDate>
+      <itunes:duration>1200</itunes:duration>
+      <itunes:summary>This week’s Climate Digest covers the SBTi’s latest consultations on FLAG and power sector standards, EU climate policy shifts including a 46% electrification target, and new research on carbon credit systems in Australia and California. We also highlight a biomass carbon removal offtake deal in Namibia and the EU’s emergency response to Mediterranean wildfires.</itunes:summary>
+      <itunes:explicit>false</itunes:explicit>
+    </item>
     <item>
       <title>The Climate Digest — Episode 21</title>
       <link>https://github.com/Carbon-Digest/esg-digest/releases/download/week-33-2026/digest_w33_2026.mp3</link>
